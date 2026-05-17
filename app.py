@@ -183,6 +183,11 @@ def upload() -> str:
     assert current_user is not None
 
     if request.method == 'POST':
+        user_docs = list_user_documents(int(current_user['id']))
+        if len(user_docs) >= 2:
+            flash('Account limit reached: You can only upload a maximum of 2 documents.', 'error')
+            return redirect(url_for('upload'))
+
         uploaded_file = request.files.get('document')
         if uploaded_file is None:
             flash('Please choose a file.', 'error')
@@ -218,6 +223,22 @@ def chat_send():
         question = str(payload.get('message', ''))
     else:
         question = request.form.get('message', '')
+
+    if len(question.split()) > 40:
+        error_msg = 'Message too long: Please keep your message under 40 words.'
+        if request.is_json:
+            return jsonify({'ok': False, 'error': error_msg}), 400
+        flash(error_msg, 'error')
+        return redirect(url_for('chat'))
+
+    messages = list_chat_messages(int(current_user['id']))
+    user_message_count = sum(1 for m in messages if m.get('role') == 'user')
+    if user_message_count >= 10:
+        error_msg = 'Account limit reached: Maximum of 10 messages allowed per account.'
+        if request.is_json:
+            return jsonify({'ok': False, 'error': error_msg}), 400
+        flash(error_msg, 'error')
+        return redirect(url_for('chat'))
 
     try:
         result = chat_with_bot(int(current_user['id']), question)
