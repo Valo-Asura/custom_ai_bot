@@ -6,7 +6,7 @@ DEFAULT_PERSONALITY = {
     'bot_name': 'Personal AI Bot',
     'personality_prompt': "You are a helpful personal AI assistant grounded in the user's uploaded knowledge base.",
     'tone': 'Clear and practical',
-    'description': 'A minimal demo assistant.',
+    'description': 'A helpful personal AI assistant.',
 }
 
 

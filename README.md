@@ -86,7 +86,7 @@ Visit `http://127.0.0.1:5000`. The first boot automatically initializes the SQLi
 
 ---
 
-## 💡 Interview & Pitch Talking Points
+## 💡 Key Technical Features
 
 If reviewing this project for an engineering role, consider the following technical decisions:
 
@@ -95,7 +95,7 @@ If reviewing this project for an engineering role, consider the following techni
 2. **Why separate Chat and Embedding providers?**
    - Cost optimization and performance. A developer might want free embeddings (via local Ollama or HuggingFace) while paying for high-tier logic models (like Groq's Llama 3 or GPT-4 via OpenRouter).
 3. **How does the platform handle scaling?**
-   - The `config.py` is written to be serverless-aware (e.g., detecting Vercel runtime environments). While the demo uses SQLite for portability, the data access layer can easily be swapped for Postgres or Turso via a connection adapter.
+   - The `config.py` is written to be serverless-aware (e.g., detecting Vercel runtime environments). While the app uses SQLite for portability, the data access layer can easily be swapped for Postgres or Turso via a connection adapter.
 4. **How are Vector collisions prevented?**
    - Pinecone upserts are tagged with strict `namespaces` mapped to the authenticated user's ID, ensuring the RAG pipeline only retrieves context legally accessible to the session owner.
 

@@ -343,7 +343,7 @@ def _ensure_sqlite_supported() -> None:
     if database_url and not database_url.startswith('sqlite'):
         raise RuntimeError(
             'DATABASE_URL is reserved as a deployment adapter placeholder. '
-            'This interview demo ships with SQLite only unless MONGODB_URI is configured. '
+            'This application ships with SQLite only unless MONGODB_URI is configured. '
             'Use MongoDB or extend an external SQL adapter for other engines.'
         )
 

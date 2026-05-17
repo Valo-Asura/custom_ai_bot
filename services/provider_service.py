@@ -35,8 +35,8 @@ def upsert_provider_config(
 ) -> None:
     db = get_db()
     existing = db.execute('SELECT * FROM provider_configs WHERE user_id = ?', (user_id,)).fetchone()
-    # SECURITY: API keys are stored in plaintext for demo only. In production, encrypt secrets or use a managed secret store.
-    # SECURITY:SECRETS - plaintext API key storage is demo-only; encrypt in production.
+    # SECURITY: API keys are stored in plaintext. In production, encrypt secrets or use a managed secret store.
+    # SECURITY:SECRETS - plaintext API key storage is basic; encrypt in production.
     if existing:
         final_chat_api_key = chat_api_key.strip() if chat_api_key.strip() else existing['chat_api_key']
         final_embedding_api_key = embedding_api_key.strip() if embedding_api_key.strip() else existing['embedding_api_key']
