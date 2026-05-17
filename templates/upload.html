@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Upload | Personal AI Bot Builder{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>Knowledge Base Upload</h1>
+        <p class="muted">Upload PDF, TXT, or DOCX files for LangChain chunking and Pinecone indexing.</p>
+    </div>
+</section>
+
+<section class="card">
+    <form method="post" enctype="multipart/form-data" class="stack-form">
+        <label>Document
+            <input type="file" name="document" accept=".pdf,.txt,.docx" required>
+        </label>
+        <p class="muted">Maximum upload size: 10 MB by default, configurable in `.env`.</p>
+        <button type="submit">Upload and Index</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Uploaded Files</h2>
+    {% if documents %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Type</th>
+                    <th>Namespace</th>
+                    <th>Chunks</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td>{{ document.original_filename }}</td>
+                        <td>{{ document.file_type }}</td>
+                        <td>{{ document.pinecone_namespace }}</td>
+                        <td>{{ document.chunk_count }}</td>
+                        <td>{{ document.uploaded_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">No documents uploaded yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

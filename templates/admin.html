@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Admin | Personal AI Bot Builder{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p class="muted">Review users, uploads, provider selections, and basic app health.</p>
+    </div>
+</section>
+
+<section class="grid three-col">
+    <article class="card">
+        <h2>User Count</h2>
+        <p class="metric">{{ user_count }}</p>
+    </article>
+    <article class="card">
+        <h2>SQLite</h2>
+        <p>{{ health.sqlite.message }}</p>
+    </article>
+    <article class="card">
+        <h2>Pinecone / Uploads</h2>
+        <p>{{ health.pinecone.message }}</p>
+        <p>{{ health.uploads.message }}</p>
+    </article>
+</section>
+
+<section class="card">
+    <h2>Users</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>{{ user.created_at }}</td>
+                    <td>
+                        {% if user.role != 'admin' %}
+                            <form method="post" action="{{ url_for('admin_delete_user', user_id=user.id) }}">
+                                <button type="submit" class="danger-button">Delete Test User</button>
+                            </form>
+                        {% else %}
+                            <span class="muted">Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="card">
+    <h2>Provider Overview</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Chat</th>
+                <th>Embedding</th>
+                <th>Chat Key</th>
+                <th>Embedding Key</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in provider_overview %}
+                <tr>
+                    <td>{{ row.email }}</td>
+                    <td>{{ row.chat_provider or 'Not set' }} / {{ row.chat_model or 'Not set' }}</td>
+                    <td>{{ row.embedding_provider or 'Not set' }} / {{ row.embedding_model or 'Not set' }}</td>
+                    <td>{{ row.chat_api_key_masked }}</td>
+                    <td>{{ row.embedding_api_key_masked }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="card">
+    <h2>Uploaded File Metadata</h2>
+    {% if documents %}
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Filename</th>
+                    <th>Type</th>
+                    <th>Namespace</th>
+                    <th>Chunks</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td>{{ document.email }}</td>
+                        <td>{{ document.original_filename }}</td>
+                        <td>{{ document.file_type }}</td>
+                        <td>{{ document.pinecone_namespace }}</td>
+                        <td>{{ document.chunk_count }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin_delete_document', document_id=document.id) }}">
+                                <button type="submit" class="danger-button">Delete Metadata</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">No uploaded files yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

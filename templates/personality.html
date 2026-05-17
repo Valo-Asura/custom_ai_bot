@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Personality | Personal AI Bot Builder{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>Bot Personality</h1>
+        <p class="muted">Configure how your personal assistant should behave.</p>
+    </div>
+</section>
+
+<section class="card">
+    <form method="post" class="stack-form">
+        <label>Bot Name
+            <input type="text" name="bot_name" value="{{ profile.bot_name }}" required>
+        </label>
+        <label>Personality / System Prompt
+            <textarea name="personality_prompt" rows="8" required>{{ profile.personality_prompt }}</textarea>
+        </label>
+        <label>Tone
+            <input type="text" name="tone" value="{{ profile.tone }}" placeholder="Clear, concise, friendly">
+        </label>
+        <label>Short Description
+            <textarea name="description" rows="3" placeholder="What is this bot optimized for?">{{ profile.description }}</textarea>
+        </label>
+        <label>Safety / Instruction Preference
+            <textarea rows="3" disabled>Covered by the personality/system prompt to keep the schema minimal and interview-friendly.</textarea>
+        </label>
+        <button type="submit">Save Personality</button>
+    </form>
+</section>
+{% endblock %}

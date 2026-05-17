@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Chat | Personal AI Bot Builder{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>Chat</h1>
+        <p class="muted">Ask questions against your bot personality and uploaded knowledge base.</p>
+    </div>
+</section>
+
+<section class="card chat-card">
+    <div id="chat-log" class="chat-log">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="chat-bubble {{ message.role }}">
+                    <strong>{{ message.role|title }}</strong>
+                    <p>{{ message.content }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="chat-bubble assistant">
+                <strong>Assistant</strong>
+                <p>No messages yet. Upload documents, then ask a question.</p>
+            </div>
+        {% endif %}
+    </div>
+    <form id="chat-form" class="chat-form" action="{{ url_for('chat_send') }}" method="post">
+        <textarea id="chat-input" name="message" rows="4" placeholder="Ask a question about your uploaded files..." required></textarea>
+        <div class="chat-actions">
+            <button type="submit">Send</button>
+            <span id="chat-status" class="muted"></span>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | Personal AI Bot Builder{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="muted">Manage your bot, providers, knowledge base, and RAG chat flow.</p>
+    </div>
+</section>
+
+<section class="grid two-col">
+    <article class="card">
+        <h2>Bot Personality</h2>
+        <p><strong>Name:</strong> {{ profile.bot_name }}</p>
+        <p><strong>Tone:</strong> {{ profile.tone or 'Not set' }}</p>
+        <p>{{ profile.description or 'Add a short description for your assistant.' }}</p>
+        <a class="button-link" href="{{ url_for('personality') }}">Edit Personality</a>
+    </article>
+
+    <article class="card">
+        <h2>Providers</h2>
+        <p><strong>Chat:</strong> {{ providers.chat_provider }} / {{ providers.chat_model }}</p>
+        <p><strong>Embedding:</strong> {{ providers.embedding_provider }} / {{ providers.embedding_model }}</p>
+        <p class="muted">Chat and embeddings are configured separately.</p>
+        <a class="button-link" href="{{ url_for('providers') }}">Edit Providers</a>
+    </article>
+</section>
+
+<section class="grid two-col">
+    <article class="card">
+        <div class="section-row">
+            <h2>Knowledge Base</h2>
+            <a href="{{ url_for('upload') }}">Upload files</a>
+        </div>
+        {% if documents %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Type</th>
+                        <th>Chunks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in documents %}
+                        <tr>
+                            <td>{{ document.original_filename }}</td>
+                            <td>{{ document.file_type }}</td>
+                            <td>{{ document.chunk_count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="muted">No files uploaded yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="section-row">
+            <h2>Recent Chat</h2>
+            <a href="{{ url_for('chat') }}">Open chat</a>
+        </div>
+        {% if messages %}
+            <div class="chat-preview">
+                {% for message in messages %}
+                    <div class="chat-bubble {{ message.role }}">
+                        <strong>{{ message.role|title }}</strong>
+                        <p>{{ message.content }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">No chat history yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
