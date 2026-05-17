@@ -4,7 +4,7 @@
 <section class="page-header">
     <div>
         <h1>Chat</h1>
-        <p class="muted">Ask questions against your bot personality and uploaded knowledge base.</p>
+        <p class="muted">Ask questions against your bot personality and uploaded knowledge base. <strong>Account limit:</strong> 10 messages max.</p>
     </div>
 </section>
 
@@ -25,7 +25,7 @@
         {% endif %}
     </div>
     <form id="chat-form" class="chat-form" action="{{ url_for('chat_send') }}" method="post">
-        <textarea id="chat-input" name="message" rows="4" placeholder="Ask a question about your uploaded files..." required></textarea>
+        <textarea id="chat-input" name="message" rows="4" placeholder="Ask a question (Max 40 words)..." required></textarea>
         <div class="chat-actions">
             <button type="submit">Send</button>
             <span id="chat-status" class="muted"></span>
