@@ -20,10 +20,11 @@
             <input type="text" name="tone" value="{{ profile.tone }}" placeholder="Clear, concise, friendly">
         </label>
         <label>Short Description
-            <textarea name="description" rows="3" placeholder="What is this bot optimized for?">{{ profile.description }}</textarea>
+            <textarea name="description" rows="3"
+                placeholder="What is this bot optimized for?">{{ profile.description }}</textarea>
         </label>
         <label>Safety / Instruction Preference
-            <textarea rows="3" disabled>Covered by the personality/system prompt to keep the schema minimal and interview-friendly.</textarea>
+            <textarea rows="3" disabled>Covered by the personality/system prompt to keep the schema minimal.</textarea>
         </label>
         <button type="submit">Save Personality</button>
     </form>
