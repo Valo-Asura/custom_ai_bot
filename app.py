@@ -210,6 +210,32 @@ def upload() -> str:
     return render_template('upload.html', documents=list_user_documents(int(current_user['id'])))
 
 
+@app.route('/upload/documents/<int:document_id>/delete', methods=['POST'])
+@login_required
+def upload_delete_document(document_id: int):
+    current_user = get_current_user()
+    assert current_user is not None
+    document = get_document_by_id(document_id)
+    if not document or int(document['user_id']) != int(current_user['id']):
+        flash('Document not found.', 'error')
+        return redirect(url_for('upload'))
+    delete_document_assets(document)
+    flash('Document deleted.', 'success')
+    return redirect(url_for('upload'))
+
+
+@app.route('/upload/clear', methods=['POST'])
+@login_required
+def upload_clear():
+    current_user = get_current_user()
+    assert current_user is not None
+    for document in list_user_documents(int(current_user['id'])):
+        delete_document_assets(document)
+    delete_namespace(int(current_user['id']))
+    flash('Knowledge base fully cleared.', 'success')
+    return redirect(url_for('upload'))
+
+
 @app.route('/chat')
 @login_required
 def chat() -> str:
@@ -258,6 +284,18 @@ def chat_send():
     if request.is_json:
         return jsonify({'ok': True, 'answer': result['answer'], 'context_count': len(result['context_chunks'])})
 
+    return redirect(url_for('chat'))
+
+
+@app.route('/chat/clear', methods=['POST'])
+@login_required
+def chat_clear():
+    current_user = get_current_user()
+    assert current_user is not None
+    db = get_db()
+    db.execute('DELETE FROM chat_messages WHERE user_id = ?', (int(current_user['id']),))
+    db.commit()
+    flash('Chat history cleared.', 'success')
     return redirect(url_for('chat'))
 
 

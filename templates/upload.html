@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}Upload | Personal AI Bot Builder{% endblock %}
 {% block content %}
-<section class="page-header">
+<section class="page-header section-row" style="margin-bottom: 20px;">
     <div>
         <h1>Knowledge Base Upload</h1>
         <p class="muted">Upload PDF, TXT, or DOCX files for LangChain chunking and Pinecone indexing.</p>
     </div>
+    <form action="{{ url_for('upload_clear') }}" method="post" onsubmit="return confirm('Wipe entire knowledge base and Pinecone vectors? This cannot be undone.');">
+        <button type="submit" class="danger-button">Clear Knowledge Base</button>
+    </form>
 </section>
 
 <section class="card">
@@ -29,6 +32,7 @@
                     <th>Namespace</th>
                     <th>Chunks</th>
                     <th>Uploaded</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,6 +43,11 @@
                         <td>{{ document.pinecone_namespace }}</td>
                         <td>{{ document.chunk_count }}</td>
                         <td>{{ document.uploaded_at }}</td>
+                        <td>
+                            <form action="{{ url_for('upload_delete_document', document_id=document.id) }}" method="post" onsubmit="return confirm('Delete this document?');" style="display:inline;">
+                                <button type="submit" class="danger-button" style="padding: 6px 12px; font-size: 0.85rem;">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
