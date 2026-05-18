@@ -325,6 +325,10 @@ class MongoDatabase:
             )
             return MongoCursor(rows)
 
+        if normalized == 'DELETE FROM chat_messages WHERE user_id = ?':
+            self._collection('chat_messages').delete_many({'user_id': int(params[0])})
+            return MongoCursor()
+
         if normalized == 'SELECT EXISTS(SELECT 1 FROM uploaded_documents WHERE user_id = ?) AS has_documents':
             exists = self._collection('uploaded_documents').count_documents({'user_id': int(params[0])}, limit=1) > 0
             return MongoCursor([{'has_documents': 1 if exists else 0}])

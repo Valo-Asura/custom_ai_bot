@@ -5,7 +5,7 @@ from pathlib import Path
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
 from config import Config
-from database.db import close_db, database_health, init_db
+from database.db import close_db, database_health, get_db, init_db
 from services.auth_service import (
     admin_required,
     authenticate_user,
