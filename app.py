@@ -44,6 +44,13 @@ def inject_globals() -> dict[str, object]:
     return {'current_user': get_current_user()}
 
 
+@app.after_request
+def add_header(response):
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return response
+
+
 @app.route('/')
 def home() -> str:
     if get_current_user():
