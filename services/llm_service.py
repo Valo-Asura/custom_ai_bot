@@ -4,7 +4,6 @@ from typing import Any
 
 import requests
 from flask import current_app
-from huggingface_hub import InferenceClient
 
 
 def _openai_compatible_chat(
@@ -62,6 +61,7 @@ def _gemini_chat(model: str, api_key: str, system_prompt: str, user_prompt: str)
 
 
 def _huggingface_chat(model: str, api_key: str, system_prompt: str, user_prompt: str) -> str:
+    from huggingface_hub import InferenceClient
     if not api_key:
         raise ValueError('Hugging Face API key is required for hosted chat inference.')
     client = InferenceClient(api_key=api_key)

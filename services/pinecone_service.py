@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from flask import current_app
-from pinecone import Pinecone, ServerlessSpec
 
 
-def _client() -> Pinecone:
+def _client() -> Any:
+    from pinecone import Pinecone
     api_key = current_app.config['PINECONE_API_KEY']
     if not api_key:
         raise ValueError('Pinecone is not configured. Add PINECONE_API_KEY and index settings.')
@@ -14,6 +14,7 @@ def _client() -> Pinecone:
 
 
 def ensure_index(dimension: int) -> Any:
+    from pinecone import ServerlessSpec
     client = _client()
     index_name = current_app.config['PINECONE_INDEX_NAME']
     existing_indexes = client.list_indexes().names()

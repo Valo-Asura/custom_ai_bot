@@ -4,7 +4,6 @@ from typing import Any
 
 import requests
 from flask import current_app
-from huggingface_hub import InferenceClient
 
 
 def _normalize_embedding(vector: Any) -> list[float]:
@@ -51,6 +50,7 @@ def _embed_with_gemini(model: str, api_key: str, texts: list[str]) -> list[list[
 
 
 def _embed_with_huggingface(model: str, api_key: str | None, texts: list[str]) -> list[list[float]]:
+    from huggingface_hub import InferenceClient
     if api_key:
         client = InferenceClient(api_key=api_key)
         embeddings: list[list[float]] = []

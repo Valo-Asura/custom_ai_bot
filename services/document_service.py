@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from PyPDF2 import PdfReader
-from docx import Document
 from flask import current_app
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
@@ -28,11 +26,13 @@ def _upload_path() -> Path:
 
 
 def _extract_pdf_text(file_path: Path) -> str:
+    from PyPDF2 import PdfReader
     reader = PdfReader(str(file_path))
     return '\n'.join((page.extract_text() or '') for page in reader.pages)
 
 
 def _extract_docx_text(file_path: Path) -> str:
+    from docx import Document
     document = Document(str(file_path))
     return '\n'.join(paragraph.text for paragraph in document.paragraphs)
 
