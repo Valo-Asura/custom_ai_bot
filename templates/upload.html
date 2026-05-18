@@ -9,7 +9,7 @@
 </section>
 
 <section class="card">
-    <form method="post" enctype="multipart/form-data" class="stack-form">
+    <form id="upload-form" method="post" enctype="multipart/form-data" class="stack-form">
         <label>Document
             <input type="file" name="document" accept=".pdf,.txt,.docx" required>
         </label>
@@ -47,4 +47,27 @@
         <p class="muted">No documents uploaded yet.</p>
     {% endif %}
 </section>
+
+<div id="upload-overlay" class="upload-overlay">
+    <div class="overlay-content">
+        <div class="spinner-logo"></div>
+        <h3>Upload is in process...</h3>
+        <p class="muted">Extracting text, generating embeddings, and indexing securely.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadForm = document.getElementById('upload-form');
+    const overlay = document.getElementById('upload-overlay');
+    if (uploadForm && overlay) {
+        uploadForm.addEventListener('submit', () => {
+            // Give the browser a tiny delay to ensure form validation passes before showing overlay
+            setTimeout(() => {
+                overlay.classList.add('active');
+            }, 50);
+        });
+    }
+});
+</script>
 {% endblock %}
