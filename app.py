@@ -34,6 +34,7 @@ app.secret_key = app.config['SECRET_KEY']
 app.teardown_appcontext(close_db)
 
 app.config['UPLOAD_FOLDER'].mkdir(parents=True, exist_ok=True)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB limit
 
 with app.app_context():
     init_db()
@@ -266,8 +267,8 @@ def chat_send():
 
     messages = list_chat_messages(int(current_user['id']))
     user_message_count = sum(1 for m in messages if m.get('role') == 'user')
-    if user_message_count >= 10:
-        error_msg = 'Account limit reached: Maximum of 10 messages allowed per account.'
+    if user_message_count >= 5:
+        error_msg = 'Account limit reached: Maximum of 5 messages allowed per account.'
         if request.is_json:
             return jsonify({'ok': False, 'error': error_msg}), 400
         flash(error_msg, 'error')

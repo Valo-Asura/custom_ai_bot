@@ -9,7 +9,7 @@
 
 **Personal AI Bot Builder** is a robust, full-stack application designed to demonstrate advanced system architecture, API abstraction, and applied AI concepts. It serves as a comprehensive knowledge-base chat platform where users can securely authenticate, define custom AI personalities, index multiple document formats, and chat with their tailored bots using a decoupled RAG pipeline.
 
-Built as an engineering portfolio piece, this project avoids overengineered frontend frameworks in favor of a clean, highly optimized Flask/SQLite backbone. It emphasizes **modular provider abstraction**, **data security**, and **efficient embedding pipelines**.
+Built as an engineering portfolio piece, this project avoids overengineered frontend frameworks in favor of a clean, highly optimized Flask/MongoDB backbone. It emphasizes **modular provider abstraction**, **data security**, and **efficient embedding pipelines**.
 
 ## 🏗️ Architecture & Engineering Highlights
 
@@ -28,8 +28,14 @@ This platform is engineered to abstract away the underlying LLM provider, allowi
 
 ### 🔹 Security & State Management
 - **Role-Based Access Control (RBAC)**: Distinct `admin` and `user` roles with protected routing.
+- **Resource Protection & Limits**: Enforces strict payload limits (5MB maximum document size) and chat history quotas (5 messages maximum) per user to ensure serverless stability and prevent API abuse.
+- **Full User Sovereignty**: UI controls allow users to independently wipe their own chat histories, uploaded documents, and associated vector embeddings directly from Pinecone.
 - **Secure Handling of Secrets**: API keys are conditionally rendered and securely stored, preventing frontend leakage (demonstrating mitigation of IDOR and XSS).
-- **SQLite Normalization**: Fully normalized database schema managed via raw SQL to demonstrate strong database fundamentals.
+- **MongoDB NoSQL Architecture**: Scalable, serverless-ready NoSQL data storage using MongoDB, ensuring seamless persistent user data across Vercel edge deployments.
+
+### ⚡ Serverless Optimizations
+- **Cold-Start Eradication**: Eliminates massive ML package bloat by strictly relying on lightweight subsets (like `langchain-text-splitters` instead of the full `langchain` library). This trims the Vercel deployment payload drastically, cutting serverless cold-start latency from 10+ seconds to near-instantaneous execution.
+- **Edge Caching**: Native Flask middlewares inject aggressive `Cache-Control` immutable headers to static assets, offloading delivery to Vercel's global Edge CDN.
 
 ---
 
@@ -82,7 +88,7 @@ Key variables to note:
 ```bash
 python app.py
 ```
-Visit `http://127.0.0.1:5000`. The first boot automatically initializes the SQLite schema and provisions an admin account.
+Visit `http://127.0.0.1:5000`. If a `MONGODB_URI` is provided, it connects to your cluster. Otherwise, the app gracefully falls back to an ephemeral local SQLite DB for instant testing.
 
 ---
 
@@ -95,7 +101,7 @@ If reviewing this project for an engineering role, consider the following techni
 2. **Why separate Chat and Embedding providers?**
    - Cost optimization and performance. A developer might want free embeddings (via local Ollama or HuggingFace) while paying for high-tier logic models (like Groq's Llama 3 or GPT-4 via OpenRouter).
 3. **How does the platform handle scaling?**
-   - The `config.py` is written to be serverless-aware (e.g., detecting Vercel runtime environments). While the app uses SQLite for portability, the data access layer can easily be swapped for Postgres or Turso via a connection adapter.
+   - The `config.py` is written to be entirely serverless-aware. By utilizing MongoDB as the primary database backend, the application guarantees persistent data storage across highly scalable Vercel environments, bypassing the ephemeral filesystem limits of traditional serverless functions.
 4. **How are Vector collisions prevented?**
    - Pinecone upserts are tagged with strict `namespaces` mapped to the authenticated user's ID, ensuring the RAG pipeline only retrieves context legally accessible to the session owner.
 
