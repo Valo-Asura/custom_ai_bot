@@ -34,7 +34,7 @@ app.secret_key = app.config['SECRET_KEY']
 app.teardown_appcontext(close_db)
 
 app.config['UPLOAD_FOLDER'].mkdir(parents=True, exist_ok=True)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB limit
+app.config['MAX_CONTENT_LENGTH'] = app.config['MAX_CONTENT_LENGTH_MB'] * 1024 * 1024
 
 with app.app_context():
     init_db()
@@ -49,6 +49,7 @@ def inject_globals() -> dict[str, object]:
 def add_header(response):
     if request.path.startswith('/static/'):
         response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
     return response
 
 
@@ -61,11 +62,12 @@ def home() -> str:
 
 @app.route('/healthz')
 def healthz():
+    deep_check = request.args.get('deep') == '1'
     return jsonify(
         {
             'status': 'ok',
-            'sqlite': database_health(),
-            'pinecone': pinecone_health(),
+            'database': database_health(check_remote=deep_check),
+            'pinecone': pinecone_health(check_remote=deep_check),
         }
     )
 

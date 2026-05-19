@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Upload | Personal AI Bot Builder{% endblock %}
 {% block content %}
-<section class="page-header section-row" style="margin-bottom: 20px;">
+<section class="page-header section-row">
     <div>
         <h1>Knowledge Base Upload</h1>
         <p class="muted">Upload PDF, TXT, or DOCX files for LangChain chunking and Pinecone indexing.</p>
@@ -16,7 +16,7 @@
         <label>Document
             <input type="file" name="document" accept=".pdf,.txt,.docx" required>
         </label>
-        <p class="muted" style="color: var(--danger); font-weight: 800;"><strong>Account limit:</strong> 2 documents maximum. Max file size: 5 MB.</p>
+        <p class="limit-note"><strong>Account limit:</strong> 2 documents maximum. Max file size: 5 MB.</p>
         <button type="submit">Upload and Index</button>
     </form>
 </section>
@@ -44,8 +44,8 @@
                         <td>{{ document.chunk_count }}</td>
                         <td>{{ document.uploaded_at }}</td>
                         <td>
-                            <form action="{{ url_for('upload_delete_document', document_id=document.id) }}" method="post" onsubmit="return confirm('Delete this document?');" style="display:inline;">
-                                <button type="submit" class="danger-button" style="padding: 6px 12px; font-size: 0.85rem;">Delete</button>
+                            <form action="{{ url_for('upload_delete_document', document_id=document.id) }}" method="post" onsubmit="return confirm('Delete this document?');">
+                                <button type="submit" class="danger-button">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -65,18 +65,4 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const uploadForm = document.getElementById('upload-form');
-    const overlay = document.getElementById('upload-overlay');
-    if (uploadForm && overlay) {
-        uploadForm.addEventListener('submit', () => {
-            // Give the browser a tiny delay to ensure form validation passes before showing overlay
-            setTimeout(() => {
-                overlay.classList.add('active');
-            }, 50);
-        });
-    }
-});
-</script>
 {% endblock %}

@@ -4,19 +4,37 @@ from typing import Any
 
 from flask import current_app
 
+_client_cache: Any | None = None
+_index_cache: dict[str, Any] = {}
+_verified_dimensions: dict[str, int] = {}
+
 
 def _client() -> Any:
+    global _client_cache
     from pinecone import Pinecone
     api_key = current_app.config['PINECONE_API_KEY']
     if not api_key:
         raise ValueError('Pinecone is not configured. Add PINECONE_API_KEY and index settings.')
-    return Pinecone(api_key=api_key)
+    if _client_cache is None:
+        _client_cache = Pinecone(api_key=api_key)
+    return _client_cache
+
+
+def _index() -> Any:
+    index_name = current_app.config['PINECONE_INDEX_NAME']
+    if index_name not in _index_cache:
+        _index_cache[index_name] = _client().Index(index_name)
+    return _index_cache[index_name]
 
 
 def ensure_index(dimension: int) -> Any:
     from pinecone import ServerlessSpec
-    client = _client()
     index_name = current_app.config['PINECONE_INDEX_NAME']
+
+    if _verified_dimensions.get(index_name) == int(dimension):
+        return _index()
+
+    client = _client()
     existing_indexes = client.list_indexes().names()
 
     if index_name not in existing_indexes:
@@ -39,7 +57,8 @@ def ensure_index(dimension: int) -> Any:
             f'Pinecone index dimension mismatch. Expected {dimension}, found {actual_dimension}. '
             'Use a matching embedding model or a separate index.'
         )
-    return client.Index(index_name)
+    _verified_dimensions[index_name] = int(actual_dimension or dimension)
+    return _index()
 
 
 def upsert_vectors(
@@ -74,8 +93,7 @@ def upsert_vectors(
 
 
 def query_vectors(namespace: str, vector: list[float], top_k: int = 4) -> list[dict[str, Any]]:
-    index = ensure_index(len(vector))
-    response = index.query(namespace=namespace, vector=vector, top_k=top_k, include_metadata=True)
+    response = _index().query(namespace=namespace, vector=vector, top_k=top_k, include_metadata=True)
     matches = getattr(response, 'matches', None)
     if matches is None and isinstance(response, dict):
         matches = response.get('matches', [])
@@ -93,27 +111,27 @@ def query_vectors(namespace: str, vector: list[float], top_k: int = 4) -> list[d
 
 def delete_document_vectors(user_id: int, document_id: int) -> None:
     try:
-        index = _client().Index(current_app.config['PINECONE_INDEX_NAME'])
         namespace = f'user_{user_id}'
-        ids = index.list(prefix=f'doc-{document_id}-chunk-', namespace=namespace)
+        ids = _index().list(prefix=f'doc-{document_id}-chunk-', namespace=namespace)
         collected_ids = list(ids) if ids else []
         if collected_ids:
-            index.delete(ids=collected_ids, namespace=namespace)
+            _index().delete(ids=collected_ids, namespace=namespace)
     except Exception:
         return
 
 
 def delete_namespace(user_id: int) -> None:
     try:
-        index = _client().Index(current_app.config['PINECONE_INDEX_NAME'])
-        index.delete(delete_all=True, namespace=f'user_{user_id}')
+        _index().delete(delete_all=True, namespace=f'user_{user_id}')
     except Exception:
         return
 
 
-def pinecone_health() -> dict[str, str]:
+def pinecone_health(check_remote: bool = False) -> dict[str, str]:
     if not current_app.config['PINECONE_API_KEY']:
         return {'status': 'missing', 'message': 'Pinecone configured or missing: missing API key'}
+    if not check_remote:
+        return {'status': 'ok', 'message': 'Pinecone configured'}
     try:
         client = _client()
         index_name = current_app.config['PINECONE_INDEX_NAME']

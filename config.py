@@ -23,7 +23,15 @@ def _resolve_runtime_path(configured_path: str, *, for_uploads: bool = False) ->
     return candidate
 
 
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
 class Config:
+    IS_VERCEL = bool(os.getenv('VERCEL'))
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me')
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
@@ -33,8 +41,16 @@ class Config:
     DATABASE_URL = os.getenv('DATABASE_URL', '').strip() or None
     DATABASE_PATH = _resolve_runtime_path(os.getenv('DATABASE_PATH', 'database/app.db'))
     UPLOAD_FOLDER = _resolve_runtime_path(os.getenv('UPLOAD_FOLDER', 'uploads'), for_uploads=True)
-    MAX_CONTENT_LENGTH_MB = int(os.getenv('MAX_CONTENT_LENGTH_MB', '10'))
+    MAX_CONTENT_LENGTH_MB = int(os.getenv('MAX_CONTENT_LENGTH_MB', '5'))
     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH_MB * 1024 * 1024
+    HTTP_CONNECT_TIMEOUT_SECONDS = float(os.getenv('HTTP_CONNECT_TIMEOUT_SECONDS', '3'))
+    HTTP_READ_TIMEOUT_SECONDS = float(os.getenv('HTTP_READ_TIMEOUT_SECONDS', '24'))
+    LOCAL_HTTP_READ_TIMEOUT_SECONDS = float(os.getenv('LOCAL_HTTP_READ_TIMEOUT_SECONDS', '4'))
+    CHAT_MAX_TOKENS = int(os.getenv('CHAT_MAX_TOKENS', '700'))
+    MONGO_SERVER_SELECTION_TIMEOUT_MS = int(os.getenv('MONGO_SERVER_SELECTION_TIMEOUT_MS', '2500'))
+    MONGO_CONNECT_TIMEOUT_MS = int(os.getenv('MONGO_CONNECT_TIMEOUT_MS', '2500'))
+    MONGO_SOCKET_TIMEOUT_MS = int(os.getenv('MONGO_SOCKET_TIMEOUT_MS', '6000'))
+    MONGO_AUTO_CREATE_INDEXES = _env_flag('MONGO_AUTO_CREATE_INDEXES', default=not IS_VERCEL)
 
     PINECONE_API_KEY = os.getenv('PINECONE_API_KEY', '').strip()
     PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'personal-ai-bot')
@@ -47,10 +63,10 @@ class Config:
     HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY', '').strip()
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434').rstrip('/')
 
-    DEFAULT_CHAT_PROVIDER = os.getenv('DEFAULT_CHAT_PROVIDER', 'ollama')
-    DEFAULT_CHAT_MODEL = os.getenv('DEFAULT_CHAT_MODEL', 'llama3.1')
-    DEFAULT_EMBEDDING_PROVIDER = os.getenv('DEFAULT_EMBEDDING_PROVIDER', 'ollama')
-    DEFAULT_EMBEDDING_MODEL = os.getenv('DEFAULT_EMBEDDING_MODEL', 'embeddinggemma')
+    DEFAULT_CHAT_PROVIDER = os.getenv('DEFAULT_CHAT_PROVIDER', 'groq')
+    DEFAULT_CHAT_MODEL = os.getenv('DEFAULT_CHAT_MODEL', 'llama-3.3-70b-versatile')
+    DEFAULT_EMBEDDING_PROVIDER = os.getenv('DEFAULT_EMBEDDING_PROVIDER', 'gemini')
+    DEFAULT_EMBEDDING_MODEL = os.getenv('DEFAULT_EMBEDDING_MODEL', 'gemini-embedding-001')
 
     CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '1000'))
     CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', '150'))

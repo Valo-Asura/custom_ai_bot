@@ -1,112 +1,237 @@
-<div align="center">
-  <h1>🚀 Personal RAG AI Bot Builder</h1>
-  <p><b>An extensible, multi-provider Retrieval-Augmented Generation (RAG) platform.</b></p>
-</div>
+# Personal RAG AI Bot Builder
 
----
+A production-oriented Flask application for building personal AI assistants over user-uploaded documents.
 
-## 📌 Project Overview
+Users can create an assistant profile, upload a private knowledge base, configure separate chat and embedding providers, and ask grounded questions through a Retrieval-Augmented Generation pipeline. The application is designed for low-cost serverless hosting on Vercel while keeping persistent state in MongoDB and vectors in Pinecone.
 
-**Personal AI Bot Builder** is a robust, full-stack application designed to demonstrate advanced system architecture, API abstraction, and applied AI concepts. It serves as a comprehensive knowledge-base chat platform where users can securely authenticate, define custom AI personalities, index multiple document formats, and chat with their tailored bots using a decoupled RAG pipeline.
+## Quick Links
 
-Built as an engineering portfolio piece, this project avoids overengineered frontend frameworks in favor of a clean, highly optimized Flask/MongoDB backbone. It emphasizes **modular provider abstraction**, **data security**, and **efficient embedding pipelines**.
+- [Architecture](#architecture)
+- [Core Workflows](#core-workflows)
+- [Vercel Runtime Strategy](#vercel-runtime-strategy)
+- [Environment Variables](#environment-variables)
+- [Local Development](#local-development)
+- [Deployment](#deployment)
+- [Security Notes](#security-notes)
 
-## 🏗️ Architecture & Engineering Highlights
+## System Capabilities
 
-This platform is engineered to abstract away the underlying LLM provider, allowing seamless hot-swapping of both **Chat models** and **Embedding models** without changing the core application logic.
+| Area | Implementation |
+| --- | --- |
+| Authentication | Flask sessions with user/admin route protection |
+| Bot configuration | Per-user assistant name, tone, description, and system prompt |
+| Document ingestion | PDF, DOCX, and TXT extraction with strict upload limits |
+| Chunking | `langchain-text-splitters` `RecursiveCharacterTextSplitter` |
+| Embeddings | Gemini, Hugging Face, Pinecone-hosted embeddings, Ollama, sentence-transformers |
+| Vector search | Pinecone namespaces scoped as `user_{id}` |
+| Chat generation | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
+| Persistence | MongoDB Atlas in production, SQLite for local development |
+| UI | Server-rendered Jinja, cached CSS, vanilla JavaScript |
 
-### 🔹 Modular Provider Strategy
-- **Decoupled Pipelines**: Chat inference and vector embeddings are intentionally separated. You can use Groq for hyper-fast chat generation while leveraging Google Gemini or local Ollama instances for embeddings.
-- **Supported Providers**: Groq, OpenRouter, Google Gemini, Hugging Face, and local Ollama.
-- **Dynamic Routing**: Built-in fallback mechanisms ensure that if a user's API key is missing, the system gracefully degrades to environment-level `.env` keys.
-
-### 🔹 Advanced RAG (Retrieval-Augmented Generation)
-- **Multi-Format Ingestion**: Supports `.pdf`, `.docx`, and `.txt`.
-- **Intelligent Chunking**: Uses LangChain's `RecursiveCharacterTextSplitter` to maintain semantic boundaries during document ingestion.
-- **Vector Search**: Seamless integration with **Pinecone** for cloud-hosted vector indexing or fallback to local in-memory embeddings for offline testing.
-- **Namespace Isolation**: Secures user data by querying Pinecone vectors strictly scoped to `user_{user_id}` namespaces.
-
-### 🔹 Security & State Management
-- **Role-Based Access Control (RBAC)**: Distinct `admin` and `user` roles with protected routing.
-- **Resource Protection & Limits**: Enforces strict payload limits (5MB maximum document size) and chat history quotas (5 messages maximum) per user to ensure serverless stability and prevent API abuse.
-- **Full User Sovereignty**: UI controls allow users to independently wipe their own chat histories, uploaded documents, and associated vector embeddings directly from Pinecone.
-- **Secure Handling of Secrets**: API keys are conditionally rendered and securely stored, preventing frontend leakage (demonstrating mitigation of IDOR and XSS).
-- **MongoDB NoSQL Architecture**: Scalable, serverless-ready NoSQL data storage using MongoDB, ensuring seamless persistent user data across Vercel edge deployments.
-
-### ⚡ Serverless Optimizations
-- **Cold-Start Eradication**: Eliminates massive ML package bloat by strictly relying on lightweight subsets (like `langchain-text-splitters` instead of the full `langchain` library). This trims the Vercel deployment payload drastically, cutting serverless cold-start latency from 10+ seconds to near-instantaneous execution.
-- **Edge Caching**: Native Flask middlewares inject aggressive `Cache-Control` immutable headers to static assets, offloading delivery to Vercel's global Edge CDN.
-
----
-
-## ⚙️ System Workflow
+## Architecture
 
 ```mermaid
-graph TD
-    User([User]) --> Auth[Session Auth & RBAC]
-    Auth --> Upload[Document Upload]
-    Upload --> LangChain[LangChain Text Splitter]
-    LangChain --> Embedder{Embedding Provider}
-    
-    Embedder -->|Gemini/HF/Ollama| VectorDB[(Pinecone Vector DB)]
-    
-    User --> Chat[Chat Interface]
-    Chat --> Retriever[Vector Retriever]
-    Retriever --> VectorDB
-    VectorDB -.->|Context Chunks| PromptBuilder[Prompt Builder]
-    
-    PromptBuilder --> LLM{LLM Chat Provider}
-    LLM -->|Groq/OpenRouter/Local| Response([AI Response])
+flowchart LR
+    Browser[Browser] --> Flask[Flask App]
+    Flask --> Auth[Session Auth + RBAC]
+    Flask --> Mongo[(MongoDB / SQLite)]
+
+    Browser --> Upload[Document Upload]
+    Upload --> Extract[Text Extraction]
+    Extract --> Chunk[Semantic Chunking]
+    Chunk --> Embed[Embedding Provider]
+    Embed --> Pinecone[(Pinecone Namespace)]
+
+    Browser --> Chat[Chat Request]
+    Chat --> QueryEmbed[Query Embedding]
+    QueryEmbed --> Pinecone
+    Pinecone --> Context[Retrieved Context]
+    Context --> Prompt[Prompt Assembly]
+    Prompt --> LLM[Chat Provider]
+    LLM --> Browser
 ```
 
----
+## Core Workflows
 
-## 🚀 Quick Start (Local Deployment)
+### 1. Configure Providers
 
-### 1. Environment Setup
-Clone the repository and activate your virtual environment:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Flask App
+    participant DB as MongoDB/SQLite
+
+    U->>A: Select chat + embedding providers
+    U->>A: Submit optional API keys
+    A->>DB: Store provider config server-side
+    DB-->>A: Saved config
+    A-->>U: Provider settings updated
+```
+
+Chat and embeddings are intentionally separate. A user can choose Groq for fast generation and Gemini or Pinecone for embeddings without changing the core RAG code.
+
+### 2. Upload and Index Documents
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Flask App
+    participant E as Embedding Provider
+    participant P as Pinecone
+    participant DB as MongoDB/SQLite
+
+    U->>A: Upload PDF, DOCX, or TXT
+    A->>A: Validate type and size
+    A->>A: Extract text and split chunks
+    A->>E: Create embeddings
+    E-->>A: Embedding vectors
+    A->>P: Upsert vectors into user namespace
+    A->>DB: Store document metadata
+    A-->>U: Document indexed
+```
+
+### 3. Ask a Grounded Question
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Flask App
+    participant E as Embedding Provider
+    participant P as Pinecone
+    participant L as Chat Provider
+    participant DB as MongoDB/SQLite
+
+    U->>A: Send question
+    A->>E: Embed question
+    E-->>A: Query vector
+    A->>P: Search only user namespace
+    P-->>A: Top context chunks
+    A->>L: Send system prompt + context + question
+    L-->>A: Answer
+    A->>DB: Store chat messages
+    A-->>U: Return response
+```
+
+## Vercel Runtime Strategy
+
+The application is structured to avoid slow request paths on Vercel:
+
+| Constraint | Current Handling |
+| --- | --- |
+| Cold starts | Small Flask/Jinja app, no frontend build pipeline, no full LangChain dependency |
+| Static delivery | `/static/*` assets use immutable cache headers |
+| External API latency | Requests use bounded connect/read timeouts |
+| Local providers in production | Ollama and local sentence-transformers fail fast on Vercel |
+| MongoDB startup cost | Short connection timeouts and opt-in index creation |
+| Pinecone latency | Client/index handles are cached inside warm functions |
+| Upload cost | 5 MB default payload limit and 2-document account limit |
+| Chat cost | 5 user-message account limit and bounded generation tokens |
+
+Health checks are intentionally shallow by default:
+
+```bash
+curl /healthz
+```
+
+Use the remote check only when diagnosing infrastructure:
+
+```bash
+curl /healthz?deep=1
+```
+
+References:
+
+- Vercel pricing: https://vercel.com/pricing
+- Vercel timeout guidance: https://examples.vercel.com/kb/guide/what-can-i-do-about-vercel-serverless-functions-timing-out
+
+## Environment Variables
+
+Copy the template:
+
+```bash
+cp .env.example .env
+```
+
+Minimum production configuration:
+
+```bash
+FLASK_SECRET_KEY=replace-me
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB_NAME=personal-ai-bot-builder
+
+GROQ_API_KEY=...
+GEMINI_API_KEY=...
+PINECONE_API_KEY=...
+PINECONE_INDEX_NAME=personal-ai-bot
+
+DEFAULT_CHAT_PROVIDER=groq
+DEFAULT_CHAT_MODEL=llama-3.3-70b-versatile
+DEFAULT_EMBEDDING_PROVIDER=gemini
+DEFAULT_EMBEDDING_MODEL=gemini-embedding-001
+```
+
+For a new MongoDB database, set this once to create indexes:
+
+```bash
+MONGO_AUTO_CREATE_INDEXES=1
+```
+
+After indexes exist, keep it disabled on Vercel:
+
+```bash
+MONGO_AUTO_CREATE_INDEXES=0
+```
+
+## Local Development
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-*(Optional)* For offline embeddings, install `sentence-transformers`:
-```bash
-pip install sentence-transformers
-```
-
-### 2. Configuration
-Copy the template and configure your keys:
-```bash
-cp .env.example .env
-```
-Key variables to note:
-- `DEFAULT_CHAT_PROVIDER` / `DEFAULT_EMBEDDING_PROVIDER`
-- `GROQ_API_KEY`, `GEMINI_API_KEY`, `PINECONE_API_KEY`
-
-### 3. Run the Platform
-```bash
 python app.py
 ```
-Visit `http://127.0.0.1:5000`. If a `MONGODB_URI` is provided, it connects to your cluster. Otherwise, the app gracefully falls back to an ephemeral local SQLite DB for instant testing.
 
----
+Open:
 
-## 💡 Key Technical Features
+```text
+http://127.0.0.1:5000
+```
 
-If reviewing this project for an engineering role, consider the following technical decisions:
+Without `MONGODB_URI`, the app uses SQLite at `database/app.db`.
 
-1. **Why Flask & Jinja over React/Next.js?**
-   - Keeps the focus strictly on backend architecture, API design, and AI integration rather than UI state management. It proves a fundamental understanding of HTTP, sessions, and server-side rendering.
-2. **Why separate Chat and Embedding providers?**
-   - Cost optimization and performance. A developer might want free embeddings (via local Ollama or HuggingFace) while paying for high-tier logic models (like Groq's Llama 3 or GPT-4 via OpenRouter).
-3. **How does the platform handle scaling?**
-   - The `config.py` is written to be entirely serverless-aware. By utilizing MongoDB as the primary database backend, the application guarantees persistent data storage across highly scalable Vercel environments, bypassing the ephemeral filesystem limits of traditional serverless functions.
-4. **How are Vector collisions prevented?**
-   - Pinecone upserts are tagged with strict `namespaces` mapped to the authenticated user's ID, ensuring the RAG pipeline only retrieves context legally accessible to the session owner.
+Local Ollama configuration:
 
----
+```bash
+DEFAULT_CHAT_PROVIDER=ollama
+DEFAULT_CHAT_MODEL=llama3.2
+DEFAULT_EMBEDDING_PROVIDER=ollama
+DEFAULT_EMBEDDING_MODEL=nomic-embed-text
+OLLAMA_BASE_URL=http://localhost:11434
+```
 
-<div align="center">
-  <i>Built with Python, Flask, LangChain, and Pinecone.</i>
-</div>
+## Deployment
+
+1. Link the repository to Vercel.
+2. Add the environment variables above.
+3. Use MongoDB Atlas for production persistence.
+4. Use a Pinecone index dimension that matches the selected embedding model.
+5. Deploy from `main`.
+
+The included `vercel.json` configures the Python function target, memory/duration budget, region, and immutable static asset headers.
+
+## Security Notes
+
+- Protected data queries are scoped by authenticated `user_id`.
+- Admin routes require the admin role.
+- Uploaded filenames are normalized with `secure_filename`.
+- API keys are stored server-side and masked in admin views.
+- Jinja escapes rendered user and document content.
+- Pinecone operations are scoped to per-user namespaces.
+
+Production hardening checklist:
+
+- Encrypt stored provider API keys.
+- Add CSRF protection to form posts.
+- Move large ingestion jobs to a queue if upload limits are increased.
+- Add request tracing around provider calls.
+- Add streaming responses if chat latency becomes a UX issue.

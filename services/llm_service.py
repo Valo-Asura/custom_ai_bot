@@ -6,6 +6,15 @@ import requests
 from flask import current_app
 
 
+def _timeout(*, local: bool = False) -> tuple[float, float]:
+    read_timeout = (
+        current_app.config['LOCAL_HTTP_READ_TIMEOUT_SECONDS']
+        if local
+        else current_app.config['HTTP_READ_TIMEOUT_SECONDS']
+    )
+    return (current_app.config['HTTP_CONNECT_TIMEOUT_SECONDS'], read_timeout)
+
+
 def _openai_compatible_chat(
     base_url: str,
     api_key: str,
@@ -34,8 +43,9 @@ def _openai_compatible_chat(
                 {'role': 'user', 'content': user_prompt},
             ],
             'temperature': 0.2,
+            'max_tokens': current_app.config['CHAT_MAX_TOKENS'],
         },
-        timeout=120,
+        timeout=_timeout(),
     )
     response.raise_for_status()
     data = response.json()
@@ -49,8 +59,12 @@ def _gemini_chat(model: str, api_key: str, system_prompt: str, user_prompt: str)
     payload = {
         'system_instruction': {'parts': [{'text': system_prompt}]},
         'contents': [{'parts': [{'text': user_prompt}]}],
+        'generationConfig': {
+            'temperature': 0.2,
+            'maxOutputTokens': current_app.config['CHAT_MAX_TOKENS'],
+        },
     }
-    response = requests.post(endpoint, json=payload, timeout=120)
+    response = requests.post(endpoint, json=payload, timeout=_timeout())
     response.raise_for_status()
     data = response.json()
     candidates = data.get('candidates', [])
@@ -85,6 +99,8 @@ def _huggingface_chat(model: str, api_key: str, system_prompt: str, user_prompt:
 
 
 def _ollama_chat(model: str, system_prompt: str, user_prompt: str) -> str:
+    if current_app.config.get('IS_VERCEL'):
+        raise ValueError('Ollama runs locally and cannot be reached from Vercel. Choose Groq, Gemini, OpenRouter, or Hugging Face for deployed chat.')
     response = requests.post(
         f"{current_app.config['OLLAMA_BASE_URL']}/api/chat",
         json={
@@ -94,8 +110,9 @@ def _ollama_chat(model: str, system_prompt: str, user_prompt: str) -> str:
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt},
             ],
+            'options': {'num_predict': current_app.config['CHAT_MAX_TOKENS']},
         },
-        timeout=120,
+        timeout=_timeout(local=True),
     )
     response.raise_for_status()
     data = response.json()

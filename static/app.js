@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const uploadForm = document.getElementById('upload-form');
+    const overlay = document.getElementById('upload-overlay');
+    if (uploadForm && overlay) {
+        uploadForm.addEventListener('submit', () => {
+            const submitButton = uploadForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Indexing';
+            }
+            setTimeout(() => {
+                overlay.classList.add('active');
+            }, 50);
+        });
+    }
+
     const chatForm = document.getElementById('chat-form');
     if (!chatForm) {
         return;
@@ -7,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chat-input');
     const chatLog = document.getElementById('chat-log');
     const chatStatus = document.getElementById('chat-status');
+    const submitButton = chatForm.querySelector('button[type="submit"]');
 
     const appendMessage = (role, content) => {
         const wrapper = document.createElement('div');
@@ -42,16 +58,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         appendMessage('user', message);
         chatInput.value = '';
-        chatStatus.textContent = 'Thinking...';
+        chatInput.disabled = true;
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending';
+        }
+        chatStatus.textContent = 'Retrieving context...';
 
+        let timeoutId;
         try {
+            const controller = new AbortController();
+            timeoutId = window.setTimeout(() => controller.abort(), 55000);
             const response = await fetch(chatForm.action, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message }),
+                signal: controller.signal
             });
+            window.clearTimeout(timeoutId);
             const payload = await response.json();
             if (!response.ok || !payload.ok) {
                 throw new Error(payload.error || 'Chat request failed.');
@@ -59,8 +85,21 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage('assistant', payload.answer);
             chatStatus.textContent = `${payload.context_count} context chunk(s) used.`;
         } catch (error) {
-            appendMessage('assistant', `Error: ${error.message}`);
+            const message = error.name === 'AbortError'
+                ? 'The request took too long for the serverless time budget. Try a shorter question or a faster provider.'
+                : error.message;
+            appendMessage('assistant', `Error: ${message}`);
             chatStatus.textContent = 'Chat failed.';
+        } finally {
+            chatInput.disabled = false;
+            chatInput.focus();
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send';
+            }
+            if (timeoutId) {
+                window.clearTimeout(timeoutId);
+            }
         }
     });
 });

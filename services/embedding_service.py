@@ -6,15 +6,30 @@ import requests
 from flask import current_app
 
 
+def _timeout(*, local: bool = False) -> tuple[float, float]:
+    read_timeout = (
+        current_app.config['LOCAL_HTTP_READ_TIMEOUT_SECONDS']
+        if local
+        else current_app.config['HTTP_READ_TIMEOUT_SECONDS']
+    )
+    return (current_app.config['HTTP_CONNECT_TIMEOUT_SECONDS'], read_timeout)
+
+
+def _reject_local_provider_on_vercel(provider: str) -> None:
+    if current_app.config.get('IS_VERCEL'):
+        raise ValueError(f'{provider} runs locally and cannot be reached from Vercel. Choose Gemini, Pinecone, or Hugging Face embeddings.')
+
+
 def _normalize_embedding(vector: Any) -> list[float]:
     return [float(value) for value in list(vector)]
 
 
 def _embed_with_ollama(model: str, texts: list[str]) -> list[list[float]]:
+    _reject_local_provider_on_vercel('Ollama')
     response = requests.post(
         f"{current_app.config['OLLAMA_BASE_URL']}/api/embed",
         json={'model': model, 'input': texts},
-        timeout=120,
+        timeout=_timeout(local=True),
     )
     response.raise_for_status()
     data = response.json()
@@ -38,7 +53,7 @@ def _embed_with_gemini(model: str, api_key: str, texts: list[str]) -> list[list[
             for text in texts
         ]
     }
-    response = requests.post(endpoint, json=payload, timeout=120)
+    response = requests.post(endpoint, json=payload, timeout=_timeout())
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as exc:
@@ -58,10 +73,13 @@ def _embed_with_huggingface(model: str, api_key: str | None, texts: list[str]) -
             vector = client.feature_extraction(text, model=model)
             embeddings.append(_normalize_embedding(vector))
         return embeddings
+    if current_app.config.get('IS_VERCEL'):
+        raise ValueError('A Hugging Face API key is required for hosted embeddings on Vercel.')
     return _embed_with_sentence_transformers(model, texts)
 
 
 def _embed_with_sentence_transformers(model: str, texts: list[str]) -> list[list[float]]:
+    _reject_local_provider_on_vercel('sentence-transformers')
     try:
         from sentence_transformers import SentenceTransformer
     except ImportError as exc:

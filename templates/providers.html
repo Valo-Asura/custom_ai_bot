@@ -9,9 +9,9 @@
 </section>
 
 <section class="card">
-    <div class="info-box" style="margin-bottom: 20px; padding: 15px; background: var(--bg-hover); border-radius: 8px; font-size: 0.9em;">
+    <div class="info-box">
         <strong>Pricing Tiers & API Keys:</strong>
-        <ul style="margin-top: 8px; margin-bottom: 0; padding-left: 20px;">
+        <ul>
             <li><strong>Groq:</strong> Free beta tier available. <a href="https://console.groq.com/keys" target="_blank">Get API Key</a></li>
             <li><strong>Gemini:</strong> Generous free tier available. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get API Key</a></li>
             <li><strong>Pinecone:</strong> Free starter index, paid for scale. <a href="https://app.pinecone.io/" target="_blank">Get API Key</a></li>
@@ -71,7 +71,7 @@ const chatModels = {
 
 const embeddingModels = {
     'ollama': ['llama3.2', 'nomic-embed-text', 'mxbai-embed-large', 'all-minilm'],
-    'gemini': ['gemini-embedding-2', 'gemini-embedding-2-preview', 'gemini-embedding-001'],
+    'gemini': ['gemini-embedding-001', 'text-embedding-004', 'gemini-embedding-2'],
     'huggingface': ['sentence-transformers/all-MiniLM-L6-v2', 'BAAI/bge-small-en-v1.5'],
     'pinecone': ['multilingual-e5-large'],
     'sentence-transformers': ['all-MiniLM-L6-v2', 'all-mpnet-base-v2']

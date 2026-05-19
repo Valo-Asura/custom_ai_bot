@@ -2,7 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
-from flask import flash, redirect, session, url_for
+from flask import flash, g, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import get_db
@@ -11,17 +11,23 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 
 def get_current_user() -> dict[str, Any] | None:
+    if hasattr(g, 'current_user'):
+        return g.current_user
+
     user_id = session.get('user_id')
     if not user_id:
+        g.current_user = None
         return None
 
     db = get_db()
     row = db.execute('SELECT id, email, role, created_at FROM users WHERE id = ?', (user_id,)).fetchone()
     if row:
-        return dict(row)
+        g.current_user = dict(row)
+        return g.current_user
 
     restored = _restore_user_from_session()
-    return restored
+    g.current_user = restored
+    return g.current_user
 
 
 def _restore_user_from_session() -> dict[str, Any] | None:
@@ -117,7 +123,9 @@ def start_session(user: dict[str, Any]) -> None:
     session['user_id'] = user['id']
     session['user_email'] = user['email']
     session['user_role'] = user['role']
+    g.current_user = user
 
 
 def logout_user() -> None:
     session.clear()
+    g.current_user = None

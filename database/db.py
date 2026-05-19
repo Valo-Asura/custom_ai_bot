@@ -17,6 +17,8 @@ except ImportError:  # pragma: no cover - optional dependency for local SQLite-o
 
 _mongo_client: MongoClient | None = None
 _mongo_unavailable_reason: str | None = None
+_mongo_verified = False
+_mongo_indexes_ready = False
 
 
 def _now_timestamp() -> str:
@@ -364,7 +366,13 @@ def _get_mongo_client() -> MongoClient:
     if MongoClient is None:
         raise RuntimeError('pymongo is not installed. Add it to requirements before using MongoDB.')
     if _mongo_client is None:
-        _mongo_client = MongoClient(current_app.config['MONGODB_URI'], serverSelectionTimeoutMS=10000)
+        _mongo_client = MongoClient(
+            current_app.config['MONGODB_URI'],
+            serverSelectionTimeoutMS=current_app.config['MONGO_SERVER_SELECTION_TIMEOUT_MS'],
+            connectTimeoutMS=current_app.config['MONGO_CONNECT_TIMEOUT_MS'],
+            socketTimeoutMS=current_app.config['MONGO_SOCKET_TIMEOUT_MS'],
+            connect=False,
+        )
     return _mongo_client
 
 
@@ -387,10 +395,12 @@ def _sqlite_connection() -> sqlite3.Connection:
 def get_db() -> Any:
     if 'db' not in g:
         if _using_mongodb():
-            global _mongo_unavailable_reason
+            global _mongo_unavailable_reason, _mongo_verified
             try:
                 mongo_db = _get_mongo_db()
-                _get_mongo_client().admin.command('ping')
+                if not _mongo_verified:
+                    _get_mongo_client().admin.command('ping')
+                    _mongo_verified = True
                 _mongo_unavailable_reason = None
                 g.db = mongo_db
             except Exception as exc:
@@ -408,6 +418,12 @@ def close_db(_: Any = None) -> None:
 
 
 def _init_mongo_indexes() -> None:
+    global _mongo_indexes_ready
+    if not current_app.config['MONGO_AUTO_CREATE_INDEXES']:
+        _mongo_indexes_ready = True
+        return
+    if _mongo_indexes_ready:
+        return
     db = _get_mongo_db()._db
     db['users'].create_index([('id', ASCENDING)], unique=True)
     db['users'].create_index([('email', ASCENDING)], unique=True)
@@ -419,6 +435,7 @@ def _init_mongo_indexes() -> None:
     db['uploaded_documents'].create_index([('user_id', ASCENDING)])
     db['chat_messages'].create_index([('id', ASCENDING)], unique=True)
     db['chat_messages'].create_index([('user_id', ASCENDING)])
+    _mongo_indexes_ready = True
 
 
 def init_db() -> None:
@@ -451,8 +468,15 @@ def ensure_default_admin() -> None:
     db.commit()
 
 
-def database_health() -> dict[str, str]:
+def database_health(check_remote: bool = False) -> dict[str, str]:
     try:
+        if _using_mongodb() and not check_remote:
+            if _mongo_unavailable_reason:
+                return {
+                    'status': 'error',
+                    'message': f'MongoDB unavailable, using SQLite fallback: {_mongo_unavailable_reason}',
+                }
+            return {'status': 'ok', 'message': 'MongoDB configured'}
         if _using_mongodb() and _mongo_unavailable_reason is None:
             _get_mongo_client().admin.command('ping')
             return {'status': 'ok', 'message': 'MongoDB connection OK'}

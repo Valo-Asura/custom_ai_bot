@@ -4,14 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Personal AI Bot Builder{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
 </head>
 <body>
     {# SECURITY:XSS - escape rendered user/document content in templates. #}
     <header class="site-header">
-        <div class="container nav-row">
-            <a class="brand" href="{{ url_for('dashboard') if current_user else url_for('login') }}">Personal AI Bot Builder</a>
-            <nav class="nav-links">
+        <div class="container">
+            <div class="masthead-meta" aria-label="Project edition metadata">
+                <span>Vol. 1 | Serverless Edition</span>
+                <span>Flask | MongoDB | Pinecone</span>
+                <span>RAG Systems Bureau</span>
+            </div>
+            <div class="nav-row">
+                <a class="brand" href="{{ url_for('dashboard') if current_user else url_for('login') }}">
+                    <span class="brand-kicker">Personal Knowledge Desk</span>
+                    <span class="brand-title">RAG Bot Builder</span>
+                </a>
+                <nav class="nav-links" aria-label="Primary navigation">
                 {% if current_user %}
                     <a href="{{ url_for('dashboard') }}">Dashboard</a>
                     <a href="{{ url_for('personality') }}">Personality</a>
@@ -26,7 +35,8 @@
                     <a href="{{ url_for('login') }}">Login</a>
                     <a href="{{ url_for('signup') }}">Signup</a>
                 {% endif %}
-            </nav>
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -44,6 +54,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
 </body>
 </html>

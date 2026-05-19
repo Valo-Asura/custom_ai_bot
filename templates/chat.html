@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Chat | Personal AI Bot Builder{% endblock %}
 {% block content %}
-<section class="page-header section-row" style="margin-bottom: 20px;">
+<section class="page-header section-row">
     <div>
         <h1>Chat</h1>
-        <p class="muted">Ask questions against your bot personality and uploaded knowledge base. <strong style="color: var(--danger); font-weight: 800; font-size: 1.1em;">Account limit: 5 messages max.</strong></p>
+        <p class="muted">Ask questions against your bot personality and uploaded knowledge base. <strong>Account limit: 5 messages max.</strong></p>
     </div>
     <form action="{{ url_for('chat_clear') }}" method="post" onsubmit="return confirm('Clear your entire chat history?');">
         <button type="submit" class="danger-button">Clear Chat History</button>
