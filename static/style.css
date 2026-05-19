@@ -483,7 +483,11 @@ tr:hover td { background: var(--muted-bg); }
 
 .dashboard-details {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(230px, 1fr)
+    minmax(340px, 1.45fr)
+    minmax(210px, 0.8fr);
   gap: 14px;
 }
 
@@ -499,8 +503,36 @@ tr:hover td { background: var(--muted-bg); }
 .detail-card p  { font-size: 0.82rem; }
 .detail-card .muted { font-size: 0.78rem; }
 
+.knowledge-card table {
+  table-layout: fixed;
+  font-size: 0.82rem;
+}
+
+.knowledge-card th,
+.knowledge-card td {
+  padding-inline: 10px;
+  overflow-wrap: anywhere;
+}
+
+.knowledge-card th:nth-child(1),
+.knowledge-card td:nth-child(1) {
+  width: 52%;
+}
+
+.knowledge-card th:nth-child(2),
+.knowledge-card td:nth-child(2) {
+  width: 22%;
+}
+
+.knowledge-card th:nth-child(3),
+.knowledge-card td:nth-child(3) {
+  width: 26%;
+  text-align: right;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
-  .dashboard-details { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ─── Chat ──────────────────────────────────────────────────────────────── */
