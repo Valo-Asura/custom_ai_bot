@@ -3,7 +3,9 @@
 __pycache__/
 *.pyc
 .venv/
+.venv-linux/
 venv/
+node_modules/
 database/*.db
 uploads/*
 !uploads/.gitkeep
