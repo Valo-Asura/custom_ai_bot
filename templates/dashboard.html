@@ -10,7 +10,7 @@
     <a class="button-link" href="{{ url_for('chat') }}">Open Chat &rarr;</a>
 </section>
 
-<section class="dashboard-board">
+<section class="dashboard-metrics">
     <article class="card dashboard-card metric-card">
         <h2>Files</h2>
         <p class="metric">{{ documents|length }}</p>
@@ -25,15 +25,17 @@
 
     <article class="card dashboard-card metric-card">
         <h2>Mode</h2>
-        <p style="margin-top: 12px;"><strong>{{ providers.chat_provider }}</strong> <span class="muted">chat</span></p>
-        <p><strong>{{ providers.embedding_provider }}</strong> <span class="muted">embeddings</span></p>
+        <p style="margin-top: 8px; font-size:0.85rem;"><strong>{{ providers.chat_provider }}</strong> <span class="muted">chat</span></p>
+        <p style="font-size:0.85rem;"><strong>{{ providers.embedding_provider }}</strong> <span class="muted">embed</span></p>
     </article>
+</section>
 
+<section class="dashboard-details">
     <article class="card dashboard-card detail-card">
         <h2>Bot Personality</h2>
         <p><strong>Name:</strong> {{ profile.bot_name }}</p>
         <p><strong>Tone:</strong> {{ profile.tone or 'Not set' }}</p>
-        <p class="muted">{{ profile.description or 'Add a short description for your assistant.' }}</p>
+        <p class="muted">{{ profile.description or 'No description set.' }}</p>
         <a class="button-link btn-secondary" href="{{ url_for('personality') }}">Edit Personality</a>
     </article>
 

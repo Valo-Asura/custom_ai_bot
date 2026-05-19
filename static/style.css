@@ -86,7 +86,7 @@ a:hover { text-decoration: underline; }
 }
 
 .page-shell {
-  padding: 40px 0 80px;
+  padding: 20px 0 24px;
 }
 
 /* ─── Header / Nav ──────────────────────────────────────────────────────── */
@@ -198,7 +198,7 @@ a:hover { text-decoration: underline; }
   background: var(--card-bg);
   border: 2px solid var(--border);
   border-radius: var(--r-md);
-  padding: 28px;
+  padding: 16px 20px;
   box-shadow: var(--shadow-pop);
   transition: transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-bounce);
   position: relative;
@@ -215,9 +215,9 @@ a:hover { text-decoration: underline; }
 }
 
 /* ─── Grids ─────────────────────────────────────────────────────────────── */
-.grid { display: grid; gap: 24px; }
-.two-col   { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.three-col { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.grid { display: grid; gap: 16px; }
+.two-col   { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.three-col { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 
 /* ─── Metric Cards ──────────────────────────────────────────────────────── */
 .metric-card { text-align: center; }
@@ -227,10 +227,10 @@ a:hover { text-decoration: underline; }
 
 .metric {
   font-family: var(--font-head);
-  font-size: 3.5rem;
+  font-size: 2.25rem;
   font-weight: 800;
   line-height: 1;
-  margin: 12px 0;
+  margin: 8px 0;
   color: var(--fg);
 }
 
@@ -425,39 +425,45 @@ tr:hover td { background: var(--muted-bg); }
 .info-box a { color: var(--accent); }
 
 /* ─── Dashboard Board ───────────────────────────────────────────────────── */
-.dashboard-board {
+.dashboard-fit { display: flex; flex-direction: column; gap: 0; }
+.dashboard-header { margin-bottom: 16px; }
+
+.dashboard-metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto;
-  gap: 24px;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.dashboard-details {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
 }
 
 .dashboard-card.detail-card {
-  grid-column: span 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0; /* prevent overflow */
 }
 
-.dashboard-fit { display: grid; gap: 0; }
-.dashboard-header { margin-bottom: 28px; }
+/* Compact text inside detail cards */
+.detail-card h2 { font-size: 1rem; margin-bottom: 2px; }
+.detail-card p  { font-size: 0.82rem; }
+.detail-card .muted { font-size: 0.78rem; }
 
-/* Make last two detail cards span 1.5 each on wider grids */
-@media (min-width: 900px) {
-  .dashboard-board {
-    grid-template-columns: repeat(6, 1fr);
-  }
-  .metric-card { grid-column: span 2; }
-  .detail-card { grid-column: span 3; }
+@media (max-width: 900px) {
+  .dashboard-details { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ─── Chat ──────────────────────────────────────────────────────────────── */
-.chat-card { display: grid; gap: 20px; }
+.chat-card { display: grid; gap: 14px; }
 
 .chat-log, .chat-preview {
   display: grid;
-  gap: 14px;
-  max-height: 420px;
+  gap: 10px;
+  max-height: calc(100vh - 320px);
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -588,7 +594,7 @@ tr:hover td { background: var(--muted-bg); }
 .page-shell { animation: fadeUp 0.4s ease-out both; }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
