@@ -1,33 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard | Personal AI Bot Builder{% endblock %}
 {% block content %}
-<section class="page-header">
+<div class="dashboard-fit">
+<section class="page-header dashboard-header">
     <div>
         <h1>Dashboard</h1>
         <p class="muted">Manage the full RAG desk: personality, providers, uploaded documents, and chat history.</p>
     </div>
 </section>
 
-<section class="grid three-col">
-    <article class="card">
+<section class="dashboard-board">
+    <article class="card dashboard-card metric-card">
         <h2>Files</h2>
         <p class="metric">{{ documents|length }}</p>
         <p class="muted">Indexed source documents.</p>
     </article>
-    <article class="card">
+    <article class="card dashboard-card metric-card">
         <h2>Messages</h2>
         <p class="metric">{{ messages|length }}</p>
         <p class="muted">Recent records loaded for this account.</p>
     </article>
-    <article class="card">
+    <article class="card dashboard-card metric-card">
         <h2>Mode</h2>
         <p><strong>{{ providers.chat_provider }}</strong> chat</p>
         <p><strong>{{ providers.embedding_provider }}</strong> embeddings</p>
     </article>
-</section>
 
-<section class="grid two-col">
-    <article class="card">
+    <article class="card dashboard-card detail-card">
         <h2>Bot Personality</h2>
         <p><strong>Name:</strong> {{ profile.bot_name }}</p>
         <p><strong>Tone:</strong> {{ profile.tone or 'Not set' }}</p>
@@ -35,17 +34,15 @@
         <a class="button-link" href="{{ url_for('personality') }}">Edit Personality</a>
     </article>
 
-    <article class="card">
+    <article class="card dashboard-card detail-card">
         <h2>Providers</h2>
         <p><strong>Chat:</strong> {{ providers.chat_provider }} / {{ providers.chat_model }}</p>
         <p><strong>Embedding:</strong> {{ providers.embedding_provider }} / {{ providers.embedding_model }}</p>
         <p class="muted">Chat and embeddings are configured separately.</p>
         <a class="button-link" href="{{ url_for('providers') }}">Edit Providers</a>
     </article>
-</section>
 
-<section class="grid two-col">
-    <article class="card">
+    <article class="card dashboard-card detail-card">
         <div class="section-row">
             <h2>Knowledge Base</h2>
             <a href="{{ url_for('upload') }}">Upload files</a>
@@ -74,7 +71,7 @@
         {% endif %}
     </article>
 
-    <article class="card">
+    <article class="card dashboard-card detail-card">
         <div class="section-row">
             <h2>Recent Chat</h2>
             <a href="{{ url_for('chat') }}">Open chat</a>
@@ -93,4 +90,5 @@
         {% endif %}
     </article>
 </section>
+</div>
 {% endblock %}
