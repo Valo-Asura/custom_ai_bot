@@ -1,23 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}Signup | Personal AI Bot Builder{% endblock %}
+{% block title %}Sign Up | RAG Bot Builder{% endblock %}
 {% block content %}
 <section class="auth-shell">
     <div class="card narrow-card">
-        <h1>Signup</h1>
-        <p class="muted">Create a non-admin user account.</p>
+        <h1 style="margin-bottom: 6px;">Create account.</h1>
+        <p class="muted" style="margin-bottom: 24px;">Set up your personal AI knowledge base.</p>
         <form method="post" class="stack-form">
             <label>Email
-                <input type="email" name="email" required>
+                <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
             </label>
             <label>Password
-                <input type="password" name="password" required>
+                <input type="password" name="password" required autocomplete="new-password" placeholder="Choose a strong password">
             </label>
-            <label>Confirm Password
-                <input type="password" name="confirm_password" required>
-            </label>
-            <button type="submit">Create Account</button>
+            <button type="submit">Create Account &rarr;</button>
         </form>
-        <p class="inline-note">Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+        <p class="inline-note" style="margin-top: 16px;">Already have an account? <a href="{{ url_for('login') }}">Login</a>.</p>
     </div>
 </section>
 {% endblock %}

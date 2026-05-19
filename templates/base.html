@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Personal AI Bot Builder{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10">
 </head>
 <body>
     {# SECURITY:XSS - escape rendered user/document content in templates. #}
@@ -12,7 +14,7 @@
         <div class="container">
             <div class="masthead-meta" aria-label="Project edition metadata">
                 <span>Sketchbook build</span>
-                <span>Flask | MongoDB | Pinecone</span>
+                <span>Flask · MongoDB · Pinecone</span>
                 <span>Personal AI workspace</span>
             </div>
             <div class="nav-row">
@@ -54,6 +56,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=4"></script>
 </body>
 </html>

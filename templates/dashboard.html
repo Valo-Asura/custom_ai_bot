@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard | Personal AI Bot Builder{% endblock %}
+{% block title %}Dashboard | RAG Bot Builder{% endblock %}
 {% block content %}
 <div class="dashboard-fit">
-<section class="page-header dashboard-header">
+<section class="page-header dashboard-header section-row">
     <div>
         <h1>Dashboard</h1>
-        <p class="muted">Manage the full RAG desk: personality, providers, uploaded documents, and chat history.</p>
+        <p class="muted">Your RAG workspace — personality, providers, knowledge base, and chat history.</p>
     </div>
+    <a class="button-link" href="{{ url_for('chat') }}">Open Chat &rarr;</a>
 </section>
 
 <section class="dashboard-board">
@@ -15,23 +16,25 @@
         <p class="metric">{{ documents|length }}</p>
         <p class="muted">Indexed source documents.</p>
     </article>
+
     <article class="card dashboard-card metric-card">
         <h2>Messages</h2>
         <p class="metric">{{ messages|length }}</p>
-        <p class="muted">Recent records loaded for this account.</p>
+        <p class="muted">Recent records for this account.</p>
     </article>
+
     <article class="card dashboard-card metric-card">
         <h2>Mode</h2>
-        <p><strong>{{ providers.chat_provider }}</strong> chat</p>
-        <p><strong>{{ providers.embedding_provider }}</strong> embeddings</p>
+        <p style="margin-top: 12px;"><strong>{{ providers.chat_provider }}</strong> <span class="muted">chat</span></p>
+        <p><strong>{{ providers.embedding_provider }}</strong> <span class="muted">embeddings</span></p>
     </article>
 
     <article class="card dashboard-card detail-card">
         <h2>Bot Personality</h2>
         <p><strong>Name:</strong> {{ profile.bot_name }}</p>
         <p><strong>Tone:</strong> {{ profile.tone or 'Not set' }}</p>
-        <p>{{ profile.description or 'Add a short description for your assistant.' }}</p>
-        <a class="button-link" href="{{ url_for('personality') }}">Edit Personality</a>
+        <p class="muted">{{ profile.description or 'Add a short description for your assistant.' }}</p>
+        <a class="button-link btn-secondary" href="{{ url_for('personality') }}">Edit Personality</a>
     </article>
 
     <article class="card dashboard-card detail-card">
@@ -39,13 +42,13 @@
         <p><strong>Chat:</strong> {{ providers.chat_provider }} / {{ providers.chat_model }}</p>
         <p><strong>Embedding:</strong> {{ providers.embedding_provider }} / {{ providers.embedding_model }}</p>
         <p class="muted">Chat and embeddings are configured separately.</p>
-        <a class="button-link" href="{{ url_for('providers') }}">Edit Providers</a>
+        <a class="button-link btn-secondary" href="{{ url_for('providers') }}">Edit Providers</a>
     </article>
 
     <article class="card dashboard-card detail-card">
-        <div class="section-row">
+        <div class="section-row" style="margin-bottom: 12px;">
             <h2>Knowledge Base</h2>
-            <a href="{{ url_for('upload') }}">Upload files</a>
+            <a href="{{ url_for('upload') }}">Upload files &rarr;</a>
         </div>
         {% if documents %}
             <table>
@@ -72,9 +75,9 @@
     </article>
 
     <article class="card dashboard-card detail-card">
-        <div class="section-row">
+        <div class="section-row" style="margin-bottom: 12px;">
             <h2>Recent Chat</h2>
-            <a href="{{ url_for('chat') }}">Open chat</a>
+            <a href="{{ url_for('chat') }}">Open chat &rarr;</a>
         </div>
         {% if messages %}
             <div class="chat-preview">
