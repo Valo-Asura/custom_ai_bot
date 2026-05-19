@@ -489,6 +489,7 @@ tr:hover td { background: var(--muted-bg); }
     minmax(340px, 1.45fr)
     minmax(210px, 0.8fr);
   gap: 14px;
+  align-items: start;
 }
 
 .dashboard-card.detail-card {
@@ -496,6 +497,7 @@ tr:hover td { background: var(--muted-bg); }
   flex-direction: column;
   gap: 8px;
   min-width: 0; /* prevent overflow */
+  min-height: 0;
 }
 
 /* Compact text inside detail cards */
@@ -529,6 +531,23 @@ tr:hover td { background: var(--muted-bg); }
   width: 26%;
   text-align: right;
   white-space: nowrap;
+}
+
+.dashboard-card .chat-preview {
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.dashboard-card .chat-bubble {
+  padding: 9px 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.dashboard-card .chat-bubble.user,
+.dashboard-card .chat-bubble.assistant {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 @media (max-width: 900px) {
