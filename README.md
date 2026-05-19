@@ -77,6 +77,7 @@ flowchart LR
 - Provider dropdown logic lives in cached `static/app.js`.
 - Chat defaults are tuned for Vercel free-tier response time: shorter HTTP read timeout, smaller answer token budget, and fewer retrieved chunks.
 - Local-only providers fail fast on Vercel instead of hanging.
+- SQLite fallback creates its schema on connection, so local/dev fallback recovers if the generated DB file is removed.
 
 ## Local Setup
 

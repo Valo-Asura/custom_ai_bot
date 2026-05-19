@@ -389,7 +389,22 @@ def _sqlite_connection() -> sqlite3.Connection:
     connection = sqlite3.connect(database_path)
     connection.row_factory = sqlite3.Row
     connection.execute('PRAGMA foreign_keys = ON;')
+    _init_sqlite_connection(connection)
     return connection
+
+
+def _init_sqlite_connection(connection: sqlite3.Connection) -> None:
+    schema_path = Path(current_app.root_path) / 'database' / 'schema.sql'
+    connection.executescript(schema_path.read_text(encoding='utf-8'))
+
+    admin_email = current_app.config['ADMIN_EMAIL'].strip().lower()
+    existing_admin = connection.execute('SELECT id FROM users WHERE email = ?', (admin_email,)).fetchone()
+    if not existing_admin:
+        connection.execute(
+            'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)',
+            (admin_email, generate_password_hash(current_app.config['ADMIN_PASSWORD']), 'admin'),
+        )
+    connection.commit()
 
 
 def get_db() -> Any:
