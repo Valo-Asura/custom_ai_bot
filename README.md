@@ -4,6 +4,12 @@ A lightweight Flask app for building personal AI assistants that answer from upl
 
 Users can create a bot profile, choose AI providers, upload PDF/DOCX/TXT files, and chat against a private Pinecone-backed knowledge base.
 
+Live app:
+
+```text
+https://personal-ai-bot-builder-sigma.vercel.app
+```
+
 ## Screenshots
 
 | Login | Dashboard |
@@ -42,18 +48,19 @@ Users can create a bot profile, choose AI providers, upload PDF/DOCX/TXT files, 
 app.py                 # Flask app factory and bootstrap
 config.py              # Runtime config and environment defaults
 controllers/           # Route handlers grouped by workflow
-database/              # SQLite schema plus MongoDB/SQLite adapter
+database/              # SQLite schema plus MongoDB/SQLite adapter layer
 services/              # Auth, RAG, provider, document, and vector logic
 templates/             # Jinja views
 static/                # Cached CSS and JavaScript
 docs/screenshots/      # README screenshots
+uploads/               # Local upload folder; ignored except .gitkeep
 ```
 
 The current structure follows a practical MVC split:
 
 - **Controllers:** request/response flow only
 - **Views:** Jinja templates and static assets
-- **Model/Data:** `database/` adapter plus service-layer domain operations
+- **Model/Data:** `database/` persistence adapter plus service-layer domain operations
 
 ## Workflow
 
@@ -81,11 +88,24 @@ flowchart LR
 
 ## Local Setup
 
+From the project folder:
+
+```bash
+cd /home/asura/Downloads/botty/personal-ai-bot-builder
+```
+
+Create and install dependencies:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+```
+
+Run locally:
+
+```bash
 flask --app app run --host 127.0.0.1 --port 5000
 ```
 
@@ -93,6 +113,13 @@ Open:
 
 ```text
 http://127.0.0.1:5000
+```
+
+Default local admin credentials come from environment variables:
+
+```bash
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
 ```
 
 ## Required Environment
@@ -128,8 +155,14 @@ MONGO_AUTO_CREATE_INDEXES=0
 ## Deploy
 
 ```bash
-npx vercel --prod
+npx vercel deploy --prod
 ```
+
+The project includes:
+
+- `vercel.json` for Python function routing and static cache headers
+- `.vercelignore` to keep local env files, virtualenvs, SQLite DB files, and uploads out of deployments
+- `.gitignore` to keep generated runtime files out of Git
 
 ## Health Check
 
@@ -140,6 +173,8 @@ curl /healthz?deep=1
 
 `/healthz` is shallow and fast. `?deep=1` checks remote dependencies.
 
+If MongoDB is unavailable, the app falls back to SQLite so the UI can still load. For durable production data, fix the MongoDB connection and verify `/healthz?deep=1`.
+
 ## Limits
 
 - 2 uploaded documents per account
@@ -147,3 +182,10 @@ curl /healthz?deep=1
 - 5 user chat messages per account
 - Uploaded filenames are sanitized
 - Pinecone operations are scoped to `user_{id}` namespaces
+
+## Notes For Maintenance
+
+- Keep route handlers in `controllers/`.
+- Keep external API and RAG behavior in `services/`.
+- Keep database query compatibility in `database/db.py`.
+- Do not commit `.env`, `.env.local`, `database/*.db`, virtualenv folders, or uploaded files.
