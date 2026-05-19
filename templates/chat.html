@@ -5,8 +5,8 @@
     <div>
         <h1>Chat</h1>
         <p class="muted">Ask questions against your bot personality and knowledge base.</p>
-        <p class="limit-warning" style="margin-top: 10px; display: inline-block;">
-            ⚡ Account limit: <strong>5 messages max.</strong>
+        <p class="limit-warning inline-limit">
+            Account limit: <strong>5 messages max.</strong>
         </p>
     </div>
     <form action="{{ url_for('chat_clear') }}" method="post" onsubmit="return confirm('Clear your entire chat history?');">
@@ -31,10 +31,12 @@
         {% endif %}
     </div>
     <form id="chat-form" class="chat-form" action="{{ url_for('chat_send') }}" method="post">
-        <textarea id="chat-input" name="message" rows="3" placeholder="Ask a question (Enter to send, Shift+Enter for new line)…" required></textarea>
-        <div class="chat-actions">
+        <div class="chat-input-row">
+            <textarea id="chat-input" name="message" rows="2" maxlength="280" placeholder="Ask a question. Enter sends, Shift+Enter adds a line." required></textarea>
             <button type="submit">Send &rarr;</button>
-            <span id="chat-status" class="muted"></span>
+        </div>
+        <div class="chat-actions">
+            <span id="chat-status" class="muted" aria-live="polite"></span>
         </div>
     </form>
 </section>

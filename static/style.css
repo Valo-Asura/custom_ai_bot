@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
-
 /* ─── Design Tokens ─────────────────────────────────────────────────────── */
 :root {
   --bg:             #FFFDF5;
@@ -28,8 +26,8 @@
   --r-lg:    24px;
   --r-full:  9999px;
 
-  --font-head: 'Outfit', system-ui, sans-serif;
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-head: ui-rounded, "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -48,6 +46,7 @@ body {
   color: var(--fg);
   min-height: 100vh;
   line-height: 1.6;
+  text-rendering: optimizeSpeed;
 }
 
 /* ─── Reduced Motion ────────────────────────────────────────────────────── */
@@ -159,7 +158,7 @@ a:hover { text-decoration: underline; }
   padding: 6px 14px;
   border-radius: var(--r-full);
   border: 2px solid transparent;
-  transition: all 0.2s var(--ease-bounce);
+  transition: transform 0.16s var(--ease-bounce), box-shadow 0.16s var(--ease-bounce), background-color 0.16s ease;
 }
 
 .nav-links a:hover {
@@ -200,12 +199,12 @@ a:hover { text-decoration: underline; }
   border-radius: var(--r-md);
   padding: 16px 20px;
   box-shadow: var(--shadow-pop);
-  transition: transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-bounce);
+  transition: transform 0.16s var(--ease-bounce), box-shadow 0.16s var(--ease-bounce);
   position: relative;
 }
 
 .card:hover {
-  transform: rotate(-0.5deg) scale(1.01) translateY(-2px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-pop-lg);
 }
 
@@ -347,6 +346,18 @@ select {
   padding: 40px 0;
 }
 
+.auth-title {
+  margin-bottom: 6px;
+}
+
+.auth-subtitle {
+  margin-bottom: 24px;
+}
+
+.auth-note {
+  margin-top: 16px;
+}
+
 /* ─── Flash Messages ────────────────────────────────────────────────────── */
 .flash-stack { display: grid; gap: 10px; margin-bottom: 24px; }
 
@@ -423,6 +434,41 @@ tr:hover td { background: var(--muted-bg); }
 .info-box ul { padding-left: 20px; margin-top: 8px; display: grid; gap: 4px; }
 .info-box strong { color: var(--fg); }
 .info-box a { color: var(--accent); }
+
+.card-spaced {
+  margin-bottom: 24px;
+}
+
+.heading-spaced {
+  margin-bottom: 16px;
+}
+
+.inline-limit {
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.compact-mode-line {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.compact-text {
+  font-size: 0.85rem;
+}
+
+.compact-section-row {
+  margin-bottom: 12px;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.small-danger-button {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
 
 /* ─── Dashboard Board ───────────────────────────────────────────────────── */
 .dashboard-fit { display: flex; flex-direction: column; gap: 0; }
@@ -513,6 +559,13 @@ tr:hover td { background: var(--muted-bg); }
   gap: 12px;
 }
 
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
 /* ─── Upload Overlay ────────────────────────────────────────────────────── */
 .upload-overlay {
   position: fixed;
@@ -590,14 +643,6 @@ tr:hover td { background: var(--muted-bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
 
-/* ─── Page Entrance ─────────────────────────────────────────────────────── */
-.page-shell { animation: fadeUp 0.4s ease-out both; }
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .nav-row, .section-row { flex-direction: column; align-items: flex-start; }
@@ -606,4 +651,5 @@ tr:hover td { background: var(--muted-bg); }
   .chat-bubble.assistant { margin-right: 16px; }
   .card { box-shadow: var(--shadow-pop-sm); }
   button, .button-link { box-shadow: var(--shadow-pop-sm); }
+  .chat-input-row { grid-template-columns: 1fr; }
 }

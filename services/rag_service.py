@@ -79,7 +79,7 @@ def chat_with_bot(user_id: int, question: str) -> dict[str, Any]:
             api_key=str(provider_config.get('embedding_api_key') or '').strip() or None,
             texts=[cleaned_question],
         )[0]
-        matches = query_vectors(namespace=namespace, vector=question_embedding, top_k=4)
+        matches = query_vectors(namespace=namespace, vector=question_embedding, top_k=3)
         context_chunks = [str(match['metadata'].get('text', '')) for match in matches if match.get('metadata')]
 
     prompt = build_prompt(str(profile['personality_prompt']), context_chunks, cleaned_question)

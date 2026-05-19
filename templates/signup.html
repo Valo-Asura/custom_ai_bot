@@ -3,8 +3,8 @@
 {% block content %}
 <section class="auth-shell">
     <div class="card narrow-card">
-        <h1 style="margin-bottom: 6px;">Create account.</h1>
-        <p class="muted" style="margin-bottom: 24px;">Set up your personal AI knowledge base.</p>
+        <h1 class="auth-title">Create account.</h1>
+        <p class="muted auth-subtitle">Set up your personal AI knowledge base.</p>
         <form method="post" class="stack-form">
             <label>Email
                 <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
@@ -12,9 +12,12 @@
             <label>Password
                 <input type="password" name="password" required autocomplete="new-password" placeholder="Choose a strong password">
             </label>
+            <label>Confirm Password
+                <input type="password" name="confirm_password" required autocomplete="new-password" placeholder="Repeat password">
+            </label>
             <button type="submit">Create Account &rarr;</button>
         </form>
-        <p class="inline-note" style="margin-top: 16px;">Already have an account? <a href="{{ url_for('login') }}">Login</a>.</p>
+        <p class="inline-note auth-note">Already have an account? <a href="{{ url_for('login') }}">Login</a>.</p>
     </div>
 </section>
 {% endblock %}

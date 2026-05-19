@@ -1,86 +1,60 @@
 # Personal RAG AI Bot Builder
 
-> **Portfolio project** — Built to demonstrate production-grade AI engineering skills under real-world infrastructure constraints (Vercel Free Tier).
+A lightweight Flask app for building personal AI assistants that answer from uploaded documents.
 
-A lightweight Flask app for creating personal AI assistants that answer from uploaded documents.
-
-Users can:
-
-- create a bot profile and personality prompt
-- upload PDF, DOCX, or TXT files (max 2 documents, 5 MB each)
-- choose separate chat and embedding providers
-- ask questions against their private knowledge base (5 message limit)
-- clear chat history and wipe knowledge base vectors independently
+Users can create a bot profile, choose AI providers, upload PDF/DOCX/TXT files, and chat against a private Pinecone-backed knowledge base.
 
 ## Screenshots
 
-| Login | Upload |
+| Login | Dashboard |
 | --- | --- |
-| ![Login screen](docs/screenshots/01-login.png) | ![Document upload](docs/screenshots/04-document-upload.png) |
+| ![Login screen](docs/screenshots/01-login.png) | ![Dashboard](docs/screenshots/02-dashboard.png) |
 
-| Providers | Chat |
+| Providers | Upload |
 | --- | --- |
-| ![Provider setup](docs/screenshots/03-provider-setup.png) | ![Chat workflow](docs/screenshots/05-chat-workflow.png) |
+| ![Provider setup](docs/screenshots/03-provider-setup.png) | ![Document upload](docs/screenshots/04-document-upload.png) |
+
+| Chat | Personality |
+| --- | --- |
+| ![Chat workflow](docs/screenshots/05-chat-workflow.png) | ![Personality setup](docs/screenshots/06-personality.png) |
 
 ## Stack
 
 | Layer | Tech |
 | --- | --- |
-| Web app | Flask, Jinja templates |
-| UI | HTML, CSS (Playful Geometric design system), vanilla JavaScript |
-| Fonts | Outfit (headings, 800/700), Plus Jakarta Sans (body, 400/600) |
-| Auth | Flask sessions, user/admin route guards |
+| App | Flask, Jinja templates |
+| UI | HTML, CSS, vanilla JavaScript |
+| Auth | Flask sessions, user/admin guards |
 | Data | MongoDB Atlas in production, SQLite locally |
 | Vector DB | Pinecone namespaces per user |
+| Documents | PyPDF2, python-docx, TXT parser |
 | Chunking | `langchain-text-splitters` |
-| Documents | PyPDF2, python-docx, plain text parser |
-| Chat providers | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
+| Chat | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
 | Embeddings | Gemini, Hugging Face, Pinecone, Ollama, sentence-transformers |
-| Deploy | Vercel Python Functions (Free Tier) |
-
-## Design System
-
-The UI uses a **Playful Geometric** design language:
-
-- **Hard pop shadows** — `4px 4px 0px #1E293B` on cards and buttons (no blur, sticker feel)
-- **Candy buttons** — pill-shaped with lift/press micro-animations and bounce easing
-- **Dot-grid background** — warm cream (`#FFFDF5`) with a subtle 24px radial dot pattern
-- **Confetti metric cards** — each gets a unique colored shadow (violet / pink / yellow)
-- **Color-on-focus inputs** — hard colored shadow appears on `:focus`, matching the accent color
-- **Reduced-motion safe** — all animations respect `prefers-reduced-motion`
+| Deploy | Vercel Python Functions |
 
 ## Workflow
 
 ```mermaid
 flowchart LR
-    A[Upload document] --> B[Extract text]
-    B --> C[Split into chunks]
+    A[Upload file] --> B[Extract text]
+    B --> C[Split chunks]
     C --> D[Create embeddings]
-    D --> E[Store in Pinecone namespace]
-    F[Ask question] --> G[Embed question]
-    G --> H[Retrieve matching chunks]
+    D --> E[Pinecone namespace]
+    F[Ask question] --> G[Embed query]
+    G --> H[Retrieve chunks]
     H --> I[Build prompt]
     I --> J[Generate answer]
 ```
 
-## Key Ideas
+## Performance Notes
 
-- Chat and embedding providers are separate, so generation and retrieval can be tuned independently.
-- Pinecone data is isolated by namespace using `user_{id}`.
-- Static assets are cached aggressively for faster Vercel loads.
+- Static CSS/JS is served with immutable cache headers.
+- UI uses system fonts, so no remote font request is needed.
+- Page-load animation was removed to avoid first-paint work and screenshot fade.
+- Provider dropdown logic lives in cached `static/app.js`.
+- Chat defaults are tuned for Vercel free-tier response time: shorter HTTP read timeout, smaller answer token budget, and fewer retrieved chunks.
 - Local-only providers fail fast on Vercel instead of hanging.
-- MongoDB is used for persistent production state; SQLite is only the local fallback.
-- Vercel Free Tier constraints (memory, timeout, ephemeral storage) are treated as engineering challenges, not blockers.
-
-## Vercel Free Tier Engineering
-
-| Constraint | Limit | Solution |
-| --- | --- | --- |
-| Function memory | 1024 MB | Removed `langchain`, use `langchain-text-splitters` only |
-| Cold start | Penalizes large packages | Minimal deps — near-instant boot |
-| Ephemeral filesystem | SQLite resets on redeploy | MongoDB Atlas as persistent backend |
-| Execution timeout | 10s | Lightweight Groq inference calls |
-| Bandwidth | 100 GB/month | `Cache-Control: immutable` on all static assets |
 
 ## Local Setup
 
@@ -100,8 +74,6 @@ http://127.0.0.1:5000
 
 ## Required Environment
 
-Minimum production variables:
-
 ```bash
 FLASK_SECRET_KEY=replace-me
 MONGODB_URI=mongodb+srv://...
@@ -118,13 +90,13 @@ DEFAULT_EMBEDDING_PROVIDER=gemini
 DEFAULT_EMBEDDING_MODEL=gemini-embedding-001
 ```
 
-For first-time MongoDB setup, temporarily enable index creation:
+For first MongoDB setup:
 
 ```bash
 MONGO_AUTO_CREATE_INDEXES=1
 ```
 
-After indexes exist, keep it disabled on Vercel:
+After indexes exist on production:
 
 ```bash
 MONGO_AUTO_CREATE_INDEXES=0
@@ -136,8 +108,6 @@ MONGO_AUTO_CREATE_INDEXES=0
 npx vercel --prod
 ```
 
-The app includes `vercel.json` for Python function deployment and static asset cache headers.
-
 ## Health Check
 
 ```bash
@@ -147,11 +117,10 @@ curl /healthz?deep=1
 
 `/healthz` is shallow and fast. `?deep=1` checks remote dependencies.
 
-## Security Notes
+## Limits
 
-- Protected queries are scoped by authenticated `user_id`.
-- Admin routes require admin role.
-- Uploaded filenames are sanitized.
-- API keys are stored server-side and masked in admin views.
-- Pinecone operations are scoped to per-user namespaces.
-- File size capped at 5 MB; chat history capped at 5 messages per account.
+- 2 uploaded documents per account
+- 5 MB max per file
+- 5 user chat messages per account
+- Uploaded filenames are sanitized
+- Pinecone operations are scoped to `user_{id}` namespaces

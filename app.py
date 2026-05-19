@@ -128,7 +128,7 @@ def dashboard() -> str:
     profile = get_profile(int(current_user['id']))
     providers = get_provider_config(int(current_user['id']))
     documents = list_user_documents(int(current_user['id']))
-    messages = list_chat_messages(int(current_user['id']), limit=6)
+    messages = list_chat_messages(int(current_user['id']), limit=4)
     return render_template(
         'dashboard.html',
         profile=profile,

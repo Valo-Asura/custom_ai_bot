@@ -5,8 +5,8 @@
     <div>
         <h1>Knowledge Base</h1>
         <p class="muted">Upload PDF, TXT, or DOCX files — chunked and indexed into your private Pinecone namespace.</p>
-        <p class="limit-warning" style="margin-top: 10px; display: inline-block;">
-            ⚡ Account limit: <strong>2 documents max · 5 MB per file.</strong>
+        <p class="limit-warning inline-limit">
+            Account limit: <strong>2 documents max · 5 MB per file.</strong>
         </p>
     </div>
     <form action="{{ url_for('upload_clear') }}" method="post" onsubmit="return confirm('Wipe entire knowledge base and Pinecone vectors? This cannot be undone.');">
@@ -14,7 +14,7 @@
     </form>
 </section>
 
-<section class="card" style="margin-bottom: 24px;">
+<section class="card card-spaced">
     <form id="upload-form" method="post" enctype="multipart/form-data" class="stack-form">
         <label>Document
             <input type="file" name="document" accept=".pdf,.txt,.docx" required>
@@ -24,7 +24,7 @@
 </section>
 
 <section class="card">
-    <h2 style="margin-bottom: 16px;">Uploaded Files</h2>
+    <h2 class="heading-spaced">Uploaded Files</h2>
     {% if documents %}
         <table>
             <thead>
@@ -46,8 +46,8 @@
                         <td>{{ document.chunk_count }}</td>
                         <td>{{ document.uploaded_at }}</td>
                         <td>
-                            <form action="{{ url_for('upload_delete_document', document_id=document.id) }}" method="post" onsubmit="return confirm('Delete this document?');" style="display:inline;">
-                                <button type="submit" class="danger-button" style="padding: 6px 14px; font-size: 0.8rem;">Delete</button>
+                            <form action="{{ url_for('upload_delete_document', document_id=document.id) }}" method="post" onsubmit="return confirm('Delete this document?');" class="inline-form">
+                                <button type="submit" class="danger-button small-danger-button">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -66,18 +66,4 @@
         <p class="muted">Extracting text, generating embeddings, and indexing into Pinecone.</p>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const uploadForm = document.getElementById('upload-form');
-    const overlay = document.getElementById('upload-overlay');
-    if (uploadForm && overlay) {
-        uploadForm.addEventListener('submit', () => {
-            const btn = uploadForm.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = true; btn.textContent = 'Indexing…'; }
-            setTimeout(() => overlay.classList.add('active'), 50);
-        });
-    }
-});
-</script>
 {% endblock %}
