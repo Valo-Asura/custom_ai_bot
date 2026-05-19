@@ -22,7 +22,10 @@ Users can create a bot profile, choose AI providers, upload PDF/DOCX/TXT files, 
 
 | Layer | Tech |
 | --- | --- |
-| App | Flask, Jinja templates |
+| App | Flask application factory |
+| Controllers | Route modules in `controllers/` |
+| Views | Jinja templates in `templates/` |
+| Services | Business logic in `services/` |
 | UI | HTML, CSS, vanilla JavaScript |
 | Auth | Flask sessions, user/admin guards |
 | Data | MongoDB Atlas in production, SQLite locally |
@@ -32,6 +35,25 @@ Users can create a bot profile, choose AI providers, upload PDF/DOCX/TXT files, 
 | Chat | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
 | Embeddings | Gemini, Hugging Face, Pinecone, Ollama, sentence-transformers |
 | Deploy | Vercel Python Functions |
+
+## Project Structure
+
+```text
+app.py                 # Flask app factory and bootstrap
+config.py              # Runtime config and environment defaults
+controllers/           # Route handlers grouped by workflow
+database/              # SQLite schema plus MongoDB/SQLite adapter
+services/              # Auth, RAG, provider, document, and vector logic
+templates/             # Jinja views
+static/                # Cached CSS and JavaScript
+docs/screenshots/      # README screenshots
+```
+
+The current structure follows a practical MVC split:
+
+- **Controllers:** request/response flow only
+- **Views:** Jinja templates and static assets
+- **Model/Data:** `database/` adapter plus service-layer domain operations
 
 ## Workflow
 
@@ -63,7 +85,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-python app.py
+flask --app app run --host 127.0.0.1 --port 5000
 ```
 
 Open:
