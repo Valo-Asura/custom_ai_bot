@@ -15,6 +15,18 @@ The app lets users sketch out an assistant profile, upload a small knowledge bas
 | Deploy on Vercel | [Deployment](#deployment) |
 | Review security boundaries | [Security Notes](#security-notes) |
 
+## Screenshots
+
+The current interface uses the same lightweight Flask/Jinja pages in development and production. These captures show the main workflow from sign-in to retrieval chat.
+
+| Step | Screen |
+| --- | --- |
+| Sign in | ![Login screen with sketchbook styling](docs/screenshots/01-login.png) |
+| Review workspace | ![Dashboard with bot, provider, document, and chat summary cards](docs/screenshots/02-dashboard.png) |
+| Configure providers | ![Provider setup form for chat and embedding models](docs/screenshots/03-provider-setup.png) |
+| Upload documents | ![Document upload page for PDF TXT and DOCX files](docs/screenshots/04-document-upload.png) |
+| Ask questions | ![Chat page for grounded RAG questions](docs/screenshots/05-chat-workflow.png) |
+
 ## Interface Style
 
 The UI uses a sketchbook-inspired system:
