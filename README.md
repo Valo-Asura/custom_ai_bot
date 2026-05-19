@@ -1,59 +1,87 @@
 # Personal RAG AI Bot Builder
 
-A production-oriented Flask application for building personal AI assistants over user-uploaded documents.
+> A lightweight Flask application for building personal AI assistants over private documents.
 
-Users can create an assistant profile, upload a private knowledge base, configure separate chat and embedding providers, and ask grounded questions through a Retrieval-Augmented Generation pipeline. The application is designed for low-cost serverless hosting on Vercel while keeping persistent state in MongoDB and vectors in Pinecone.
+The app lets users sketch out an assistant profile, upload a small knowledge base, choose separate chat and embedding providers, and ask grounded questions through a Retrieval-Augmented Generation pipeline. It is designed for Vercel-hosted Python functions, MongoDB persistence, and Pinecone vector retrieval without adding a heavy frontend build stack.
 
-## Quick Links
+## Start Here
 
-- [Architecture](#architecture)
-- [Core Workflows](#core-workflows)
-- [Vercel Runtime Strategy](#vercel-runtime-strategy)
-- [Environment Variables](#environment-variables)
-- [Local Development](#local-development)
-- [Deployment](#deployment)
-- [Security Notes](#security-notes)
+| I want to... | Go to |
+| --- | --- |
+| Understand the system shape | [Architecture](#architecture) |
+| Follow the RAG flow | [How It Works](#how-it-works) |
+| Configure providers | [Provider Setup](#provider-setup) |
+| Run locally | [Local Development](#local-development) |
+| Deploy on Vercel | [Deployment](#deployment) |
+| Review security boundaries | [Security Notes](#security-notes) |
+
+## Interface Style
+
+The UI uses a sketchbook-inspired system:
+
+- warm paper background with subtle dot texture
+- handwritten typography via `Kalam` and `Patrick Hand`
+- wobbly cards, inputs, and buttons instead of rigid rectangles
+- hard offset shadows instead of blurred shadows
+- sticky-note/tape accents for lightweight hierarchy
+- cached static CSS and vanilla JavaScript only
+
+This keeps the interface approachable while preserving the small server-rendered footprint.
 
 ## System Capabilities
 
 | Area | Implementation |
 | --- | --- |
 | Authentication | Flask sessions with user/admin route protection |
-| Bot configuration | Per-user assistant name, tone, description, and system prompt |
-| Document ingestion | PDF, DOCX, and TXT extraction with strict upload limits |
+| Bot profile | Per-user assistant name, tone, description, and system prompt |
+| Uploads | PDF, DOCX, and TXT extraction with strict payload limits |
 | Chunking | `langchain-text-splitters` `RecursiveCharacterTextSplitter` |
 | Embeddings | Gemini, Hugging Face, Pinecone-hosted embeddings, Ollama, sentence-transformers |
-| Vector search | Pinecone namespaces scoped as `user_{id}` |
-| Chat generation | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
+| Vector store | Pinecone namespaces scoped as `user_{id}` |
+| Chat | Groq, OpenRouter, Gemini, Hugging Face, Ollama |
 | Persistence | MongoDB Atlas in production, SQLite for local development |
-| UI | Server-rendered Jinja, cached CSS, vanilla JavaScript |
+| Frontend | Jinja templates, one cached CSS file, vanilla JavaScript |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser[Browser] --> Flask[Flask App]
+    Browser[Browser] --> Flask[Flask + Jinja]
     Flask --> Auth[Session Auth + RBAC]
-    Flask --> Mongo[(MongoDB / SQLite)]
+    Flask --> Data[(MongoDB / SQLite)]
 
-    Browser --> Upload[Document Upload]
-    Upload --> Extract[Text Extraction]
-    Extract --> Chunk[Semantic Chunking]
-    Chunk --> Embed[Embedding Provider]
+    Browser --> Upload[Upload Document]
+    Upload --> Extract[Extract Text]
+    Extract --> Split[Split Chunks]
+    Split --> Embed[Embedding Provider]
     Embed --> Pinecone[(Pinecone Namespace)]
 
-    Browser --> Chat[Chat Request]
-    Chat --> QueryEmbed[Query Embedding]
+    Browser --> Chat[Ask Question]
+    Chat --> QueryEmbed[Embed Query]
     QueryEmbed --> Pinecone
-    Pinecone --> Context[Retrieved Context]
+    Pinecone --> Context[Context Chunks]
     Context --> Prompt[Prompt Assembly]
     Prompt --> LLM[Chat Provider]
     LLM --> Browser
 ```
 
-## Core Workflows
+<details>
+<summary><strong>Why Flask + Jinja?</strong></summary>
 
-### 1. Configure Providers
+The application does not need client-side routing or a large component runtime. Server-rendered pages keep first load simple, reduce deployment payload, and leave the complexity budget for the RAG pipeline, provider abstraction, and persistence layer.
+
+</details>
+
+<details>
+<summary><strong>Why separate chat and embedding providers?</strong></summary>
+
+Generation and embeddings have different cost, latency, and quality profiles. Keeping them separate allows combinations such as Groq for fast chat and Gemini or Pinecone for embeddings without changing the retrieval code.
+
+</details>
+
+## How It Works
+
+### 1. Provider Setup
 
 ```mermaid
 sequenceDiagram
@@ -61,16 +89,16 @@ sequenceDiagram
     participant A as Flask App
     participant DB as MongoDB/SQLite
 
-    U->>A: Select chat + embedding providers
+    U->>A: Choose chat provider
+    U->>A: Choose embedding provider
     U->>A: Submit optional API keys
-    A->>DB: Store provider config server-side
-    DB-->>A: Saved config
-    A-->>U: Provider settings updated
+    A->>DB: Save provider config
+    A-->>U: Settings updated
 ```
 
-Chat and embeddings are intentionally separate. A user can choose Groq for fast generation and Gemini or Pinecone for embeddings without changing the core RAG code.
+Provider keys are stored server-side and are never rendered back to the browser.
 
-### 2. Upload and Index Documents
+### 2. Document Upload
 
 ```mermaid
 sequenceDiagram
@@ -81,16 +109,17 @@ sequenceDiagram
     participant DB as MongoDB/SQLite
 
     U->>A: Upload PDF, DOCX, or TXT
-    A->>A: Validate type and size
-    A->>A: Extract text and split chunks
-    A->>E: Create embeddings
-    E-->>A: Embedding vectors
-    A->>P: Upsert vectors into user namespace
+    A->>A: Validate size and extension
+    A->>A: Extract text
+    A->>A: Split into overlapping chunks
+    A->>E: Request embeddings
+    E-->>A: Vectors
+    A->>P: Upsert into user namespace
     A->>DB: Store document metadata
     A-->>U: Document indexed
 ```
 
-### 3. Ask a Grounded Question
+### 3. Grounded Chat
 
 ```mermaid
 sequenceDiagram
@@ -104,45 +133,38 @@ sequenceDiagram
     U->>A: Send question
     A->>E: Embed question
     E-->>A: Query vector
-    A->>P: Search only user namespace
-    P-->>A: Top context chunks
-    A->>L: Send system prompt + context + question
+    A->>P: Search user namespace
+    P-->>A: Top matching chunks
+    A->>L: Prompt + context + question
     L-->>A: Answer
-    A->>DB: Store chat messages
-    A-->>U: Return response
+    A->>DB: Store messages
+    A-->>U: Render response
 ```
 
 ## Vercel Runtime Strategy
 
-The application is structured to avoid slow request paths on Vercel:
-
-| Constraint | Current Handling |
+| Constraint | Handling |
 | --- | --- |
-| Cold starts | Small Flask/Jinja app, no frontend build pipeline, no full LangChain dependency |
-| Static delivery | `/static/*` assets use immutable cache headers |
-| External API latency | Requests use bounded connect/read timeouts |
-| Local providers in production | Ollama and local sentence-transformers fail fast on Vercel |
-| MongoDB startup cost | Short connection timeouts and opt-in index creation |
-| Pinecone latency | Client/index handles are cached inside warm functions |
-| Upload cost | 5 MB default payload limit and 2-document account limit |
-| Chat cost | 5 user-message account limit and bounded generation tokens |
+| Cold starts | Small Flask/Jinja app, no frontend build pipeline, no full LangChain package |
+| Static delivery | `/static/*` uses immutable cache headers |
+| Provider latency | External calls use bounded connect/read timeouts |
+| Local providers | Ollama and local sentence-transformers fail fast on Vercel |
+| MongoDB startup | Short connection timeouts and opt-in index creation |
+| Pinecone latency | Warm functions cache Pinecone client/index handles |
+| Upload budget | Default 5 MB upload limit and 2-document account limit |
+| Chat budget | 5 user-message account limit and bounded generation tokens |
 
-Health checks are intentionally shallow by default:
+Health check:
 
 ```bash
 curl /healthz
 ```
 
-Use the remote check only when diagnosing infrastructure:
+Remote dependency check:
 
 ```bash
 curl /healthz?deep=1
 ```
-
-References:
-
-- Vercel pricing: https://vercel.com/pricing
-- Vercel timeout guidance: https://examples.vercel.com/kb/guide/what-can-i-do-about-vercel-serverless-functions-timing-out
 
 ## Environment Variables
 
@@ -152,7 +174,7 @@ Copy the template:
 cp .env.example .env
 ```
 
-Minimum production configuration:
+Minimum production values:
 
 ```bash
 FLASK_SECRET_KEY=replace-me
@@ -170,7 +192,7 @@ DEFAULT_EMBEDDING_PROVIDER=gemini
 DEFAULT_EMBEDDING_MODEL=gemini-embedding-001
 ```
 
-For a new MongoDB database, set this once to create indexes:
+For a new MongoDB database, temporarily enable index creation:
 
 ```bash
 MONGO_AUTO_CREATE_INDEXES=1
@@ -199,7 +221,7 @@ http://127.0.0.1:5000
 
 Without `MONGODB_URI`, the app uses SQLite at `database/app.db`.
 
-Local Ollama configuration:
+Local Ollama example:
 
 ```bash
 DEFAULT_CHAT_PROVIDER=ollama
@@ -212,9 +234,9 @@ OLLAMA_BASE_URL=http://localhost:11434
 ## Deployment
 
 1. Link the repository to Vercel.
-2. Add the environment variables above.
-3. Use MongoDB Atlas for production persistence.
-4. Use a Pinecone index dimension that matches the selected embedding model.
+2. Add production environment variables.
+3. Use MongoDB Atlas for persistent state.
+4. Use a Pinecone index dimension matching the selected embedding model.
 5. Deploy from `main`.
 
 The included `vercel.json` configures the Python function target, memory/duration budget, region, and immutable static asset headers.
@@ -228,10 +250,15 @@ The included `vercel.json` configures the Python function target, memory/duratio
 - Jinja escapes rendered user and document content.
 - Pinecone operations are scoped to per-user namespaces.
 
-Production hardening checklist:
+## Production Hardening
 
 - Encrypt stored provider API keys.
 - Add CSRF protection to form posts.
-- Move large ingestion jobs to a queue if upload limits are increased.
+- Move larger ingestion jobs to a queue if upload limits increase.
 - Add request tracing around provider calls.
 - Add streaming responses if chat latency becomes a UX issue.
+
+## References
+
+- Vercel pricing: https://vercel.com/pricing
+- Vercel timeout guidance: https://examples.vercel.com/kb/guide/what-can-i-do-about-vercel-serverless-functions-timing-out

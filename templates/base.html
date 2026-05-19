@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Personal AI Bot Builder{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
 </head>
 <body>
     {# SECURITY:XSS - escape rendered user/document content in templates. #}
     <header class="site-header">
         <div class="container">
             <div class="masthead-meta" aria-label="Project edition metadata">
-                <span>Vol. 1 | Serverless Edition</span>
+                <span>Sketchbook build</span>
                 <span>Flask | MongoDB | Pinecone</span>
-                <span>RAG Systems Bureau</span>
+                <span>Personal AI workspace</span>
             </div>
             <div class="nav-row">
                 <a class="brand" href="{{ url_for('dashboard') if current_user else url_for('login') }}">
-                    <span class="brand-kicker">Personal Knowledge Desk</span>
+                    <span class="brand-kicker">Personal Knowledge Notes</span>
                     <span class="brand-title">RAG Bot Builder</span>
                 </a>
                 <nav class="nav-links" aria-label="Primary navigation">
