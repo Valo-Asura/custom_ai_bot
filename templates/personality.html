@@ -10,23 +10,25 @@
 
 <section class="card">
     <form method="post" class="stack-form">
-        <label>Bot Name
-            <input type="text" name="bot_name" value="{{ profile.bot_name }}" required>
-        </label>
+        <div class="grid two-col">
+            <label>Bot Name
+                <input type="text" name="bot_name" value="{{ profile.bot_name }}" required>
+            </label>
+            <label>Tone
+                <input type="text" name="tone" value="{{ profile.tone }}" placeholder="Clear, concise, friendly">
+            </label>
+        </div>
         <label>Personality / System Prompt
-            <textarea name="personality_prompt" rows="8" required>{{ profile.personality_prompt }}</textarea>
-        </label>
-        <label>Tone
-            <input type="text" name="tone" value="{{ profile.tone }}" placeholder="Clear, concise, friendly">
+            <textarea name="personality_prompt" rows="3" required>{{ profile.personality_prompt }}</textarea>
         </label>
         <label>Short Description
-            <textarea name="description" rows="3"
+            <textarea name="description" rows="2"
                 placeholder="What is this bot optimized for?">{{ profile.description }}</textarea>
         </label>
-        <label>Safety / Instruction Preference
-            <textarea rows="3" disabled>Covered by the personality/system prompt to keep the schema minimal.</textarea>
-        </label>
-        <button type="submit">Save Personality</button>
+        <div class="form-footer-row">
+            <span class="muted inline-note">💡 Safety & instruction rules are automatically applied to keep your bot schema clean.</span>
+            <button type="submit">Save Personality</button>
+        </div>
     </form>
 </section>
 {% endblock %}

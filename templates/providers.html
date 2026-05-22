@@ -9,18 +9,21 @@
 </section>
 
 <section class="card">
-    <div class="info-box">
-        <strong>Pricing Tiers & API Keys:</strong>
-        <ul>
-            <li><strong>Groq:</strong> Free beta tier available. <a href="https://console.groq.com/keys" target="_blank">Get API Key</a></li>
-            <li><strong>Gemini:</strong> Generous free tier available. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get API Key</a></li>
-            <li><strong>Pinecone:</strong> Free starter index, paid for scale. <a href="https://app.pinecone.io/" target="_blank">Get API Key</a></li>
-            <li><strong>Ollama:</strong> 100% Free and runs locally on your machine.</li>
-            <li><strong>OpenRouter:</strong> Pay-per-token depending on the model. <a href="https://openrouter.ai/keys" target="_blank">Get API Key</a></li>
-            <li><strong>HuggingFace:</strong> Free inference API with rate limits. <a href="https://huggingface.co/settings/tokens" target="_blank">Get API Key</a></li>
-        </ul>
-    </div>
-    <form method="post" class="stack-form">
+    <details class="info-box-details">
+        <summary>💡 View API Key & Pricing Links</summary>
+        <div class="info-box" style="margin-top: 10px; margin-bottom: 0;">
+            <strong>Pricing Tiers & API Keys:</strong>
+            <ul>
+                <li><strong>Groq:</strong> Free beta tier available. <a href="https://console.groq.com/keys" target="_blank">Get API Key</a></li>
+                <li><strong>Gemini:</strong> Generous free tier available. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get API Key</a></li>
+                <li><strong>Pinecone:</strong> Free starter index, paid for scale. <a href="https://app.pinecone.io/" target="_blank">Get API Key</a></li>
+                <li><strong>Ollama:</strong> 100% Free and runs locally on your machine.</li>
+                <li><strong>OpenRouter:</strong> Pay-per-token depending on the model. <a href="https://openrouter.ai/keys" target="_blank">Get API Key</a></li>
+                <li><strong>HuggingFace:</strong> Free inference API with rate limits. <a href="https://huggingface.co/settings/tokens" target="_blank">Get API Key</a></li>
+            </ul>
+        </div>
+    </details>
+    <form method="post" class="stack-form" style="margin-top: 16px;">
         <div class="grid two-col">
             <label>Chat Provider
                 <select name="chat_provider" required>
@@ -55,8 +58,10 @@
             <input type="password" name="embedding_api_key" placeholder="{% if providers.embedding_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GEMINI_API_KEY, etc){% endif %}">
         </label>
 
-        <p class="muted">Chunking uses LangChain `RecursiveCharacterTextSplitter`, not the selected model provider.</p>
-        <button type="submit">Save Provider Settings</button>
+        <div class="form-footer-row">
+            <span class="muted inline-note">💡 Chunking uses LangChain `RecursiveCharacterTextSplitter`, not the selected model provider.</span>
+            <button type="submit">Save Provider Settings</button>
+        </div>
     </form>
 </section>
 {% endblock %}
