@@ -38,12 +38,12 @@
         </div>
 
         <label>Chat API Key
-            <input type="password" id="chat_api_key" name="chat_api_key" placeholder="{% if providers.chat_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GROQ_API_KEY, etc){% endif %}">
+            <input type="password" id="chat_api_key" name="chat_api_key" placeholder="{% if providers.chat_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Enter Chat API Key (e.g. from console.groq.com/keys){% endif %}">
         </label>
         {% if providers.chat_api_key %}
         <div style="margin-top: -6px; margin-bottom: 12px;">
             <label style="font-size: 0.85rem; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" name="clear_chat_key" value="1"> Clear custom key and use default key from .env
+                <input type="checkbox" name="clear_chat_key" value="1"> Clear saved API key
             </label>
         </div>
         {% endif %}
@@ -62,12 +62,12 @@
         </div>
 
         <label>Embedding API Key
-            <input type="password" id="embedding_api_key" name="embedding_api_key" placeholder="{% if providers.embedding_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GEMINI_API_KEY, etc){% endif %}">
+            <input type="password" id="embedding_api_key" name="embedding_api_key" placeholder="{% if providers.embedding_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Enter Embedding API Key (e.g. from aistudio.google.com){% endif %}">
         </label>
         {% if providers.embedding_api_key %}
         <div style="margin-top: -6px; margin-bottom: 12px;">
             <label style="font-size: 0.85rem; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" name="clear_embedding_key" value="1"> Clear custom key and use default key from .env
+                <input type="checkbox" name="clear_embedding_key" value="1"> Clear saved API key
             </label>
         </div>
         {% endif %}

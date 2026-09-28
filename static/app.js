@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modelOptions = {
         chat: {
-            groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.2-3b-preview', 'llama-3.2-1b-preview'],
+            groq: [
+                'openai/gpt-oss-120b',
+                'openai/gpt-oss-20b',
+                'qwen/qwen3.8-27b',
+                'meta-llama/llama-4-scout-17b-16e-instruct'
+            ],
             ollama: ['llama3.2', 'llama3.1', 'mistral', 'gemma2', 'phi3'],
             gemini: ['gemini-1.5-flash', 'gemini-1.5-pro'],
             openrouter: ['meta-llama/llama-3.1-8b-instruct', 'anthropic/claude-3.5-sonnet', 'google/gemini-pro-1.5'],
@@ -16,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const deprecatedModelMap = {
+        'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+        'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+        'gemma2-9b-it': 'openai/gpt-oss-20b',
+        'llama3-8b-8192': 'openai/gpt-oss-20b',
+        'llama3-70b-8192': 'openai/gpt-oss-120b'
+    };
+
     const hydrateModelSelect = (providerName, modelId, optionsByProvider, isUserAction = false) => {
         const providerSelect = document.querySelector(`select[name="${providerName}"]`);
         const modelSelect = document.getElementById(modelId);
@@ -24,7 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const provider = providerSelect.value;
-        const currentValue = modelSelect.dataset.current;
+        let currentValue = modelSelect.dataset.current;
+        if (currentValue && deprecatedModelMap[currentValue]) {
+            currentValue = deprecatedModelMap[currentValue];
+        }
         const options = [...(optionsByProvider[provider] || [])];
         if (!isUserAction && currentValue && !options.includes(currentValue)) {
             options.unshift(currentValue);

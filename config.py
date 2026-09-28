@@ -73,7 +73,7 @@ class Config:
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434').rstrip('/')
 
     DEFAULT_CHAT_PROVIDER = os.getenv('DEFAULT_CHAT_PROVIDER', 'groq')
-    DEFAULT_CHAT_MODEL = os.getenv('DEFAULT_CHAT_MODEL', 'llama-3.3-70b-versatile')
+    DEFAULT_CHAT_MODEL = os.getenv('DEFAULT_CHAT_MODEL', 'openai/gpt-oss-120b')
     DEFAULT_EMBEDDING_PROVIDER = os.getenv('DEFAULT_EMBEDDING_PROVIDER', 'gemini')
     DEFAULT_EMBEDDING_MODEL = os.getenv('DEFAULT_EMBEDDING_MODEL', 'gemini-embedding-001')
 

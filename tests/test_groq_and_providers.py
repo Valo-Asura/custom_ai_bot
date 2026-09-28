@@ -62,28 +62,62 @@ class TestGroqAndProviders(unittest.TestCase):
             _openai_compatible_chat(
                 base_url='https://api.groq.com/openai/v1',
                 api_key='invalid_key',
-                model='llama-3.3-70b-versatile',
+                model='openai/gpt-oss-120b',
                 system_prompt='sys',
                 user_prompt='hi',
                 provider_name='Groq',
-                env_var='GROQ_API_KEY',
             )
 
         self.assertIn('Groq API authentication failed (401 Unauthorized)', str(ctx.exception))
         self.assertIn('Invalid API Key', str(ctx.exception))
-        self.assertIn('GROQ_API_KEY', str(ctx.exception))
+        # Must NOT mention .env
+        self.assertNotIn('.env', str(ctx.exception))
 
     def test_missing_groq_api_key_message(self):
         with self.assertRaises(ValueError) as ctx:
             generate_response(
                 provider='groq',
-                model='llama-3.3-70b-versatile',
+                model='openai/gpt-oss-120b',
                 api_key='',
                 system_prompt='sys',
                 user_prompt='hi',
             )
-        self.assertIn('API key is missing for Groq', str(ctx.exception))
-        self.assertIn('GROQ_API_KEY', str(ctx.exception))
+        self.assertIn('API key is required for Groq', str(ctx.exception))
+        # Must NOT mention .env
+        self.assertNotIn('.env', str(ctx.exception))
+
+    def test_groq_model_deprecation_auto_remap(self):
+        with patch('services.llm_service._openai_compatible_chat') as mock_chat:
+            mock_chat.return_value = 'Mapped answer'
+            generate_response(
+                provider='groq',
+                model='llama-3.3-70b-versatile',
+                api_key='gsk_valid',
+                system_prompt='sys',
+                user_prompt='hi',
+            )
+            # Should have been remapped to openai/gpt-oss-120b
+            self.assertEqual(mock_chat.call_args[0][2], 'openai/gpt-oss-120b')
+
+    def test_no_env_key_on_production(self):
+        # Set IS_VERCEL to True and a server-side GROQ_API_KEY
+        self.app.config['IS_VERCEL'] = True
+        self.app.config['GROQ_API_KEY'] = 'gsk_server_secret'
+
+        # When user provides no api_key, it must NOT use GROQ_API_KEY on Vercel
+        with self.assertRaises(ValueError) as ctx:
+            generate_response(
+                provider='groq',
+                model='openai/gpt-oss-120b',
+                api_key='',
+                system_prompt='sys',
+                user_prompt='hi',
+            )
+        self.assertIn('API key is required for Groq', str(ctx.exception))
+        self.assertNotIn('gsk_server_secret', str(ctx.exception))
+        self.assertNotIn('.env', str(ctx.exception))
+
+        self.app.config['IS_VERCEL'] = False
 
     @patch('requests.post')
     def test_groq_chat_success(self, mock_post):
@@ -97,7 +131,7 @@ class TestGroqAndProviders(unittest.TestCase):
 
         answer = generate_response(
             provider='groq',
-            model='llama-3.3-70b-versatile',
+            model='openai/gpt-oss-120b',
             api_key='gsk_valid_key',
             system_prompt='sys',
             user_prompt='hi',
@@ -107,12 +141,12 @@ class TestGroqAndProviders(unittest.TestCase):
     @patch('services.llm_service.generate_response')
     def test_test_chat_connection(self, mock_gen):
         mock_gen.return_value = 'Connected successfully'
-        ok, msg = test_chat_connection('groq', 'llama-3.3-70b-versatile', 'gsk_test')
+        ok, msg = test_chat_connection('groq', 'openai/gpt-oss-120b', 'gsk_test')
         self.assertTrue(ok)
         self.assertIn('Success! Groq answered', msg)
 
         mock_gen.side_effect = ValueError('Groq API authentication failed (401 Unauthorized)')
-        ok, msg = test_chat_connection('groq', 'llama-3.3-70b-versatile', 'gsk_bad')
+        ok, msg = test_chat_connection('groq', 'openai/gpt-oss-120b', 'gsk_bad')
         self.assertFalse(ok)
         self.assertIn('401 Unauthorized', msg)
 

@@ -41,6 +41,22 @@ def _extract_error_detail(response: requests.Response) -> str:
     return text[:200] if text else ''
 
 
+GROQ_DEPRECATED_MODEL_MAP = {
+    'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+    'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+    'gemma2-9b-it': 'openai/gpt-oss-20b',
+    'llama3-8b-8192': 'openai/gpt-oss-20b',
+    'llama3-70b-8192': 'openai/gpt-oss-120b',
+}
+
+
+def _resolve_key_for_provider(resolved_api_key: str, env_var_name: str) -> str:
+    # Do not use server .env fallback key in production (Vercel)
+    if current_app.config.get('IS_VERCEL'):
+        return resolved_api_key
+    return resolved_api_key or _clean_api_key(current_app.config.get(env_var_name))
+
+
 def _openai_compatible_chat(
     base_url: str,
     api_key: str,
@@ -49,12 +65,11 @@ def _openai_compatible_chat(
     user_prompt: str,
     extra_headers: dict[str, str] | None = None,
     provider_name: str = 'Provider',
-    env_var: str = 'API_KEY',
 ) -> str:
     cleaned_key = _clean_api_key(api_key)
     if not cleaned_key:
         raise ValueError(
-            f'API key is missing for {provider_name}. Please set {env_var} in your .env file or enter your API key under Settings > Providers.'
+            f'API key is required for {provider_name}. Please enter your API key under Settings > Providers.'
         )
 
     headers = {
@@ -89,7 +104,7 @@ def _openai_compatible_chat(
         if response.status_code == 401:
             raise ValueError(
                 f'{provider_name} API authentication failed (401 Unauthorized){detail_msg}. '
-                f'Please ensure that your {env_var} in .env or the API key saved in Settings > Providers is valid and active.'
+                'Please verify that your API key saved in Settings > Providers is valid and active.'
             )
         if response.status_code == 403:
             raise ValueError(f'{provider_name} access forbidden (403 Forbidden){detail_msg}.')
@@ -112,7 +127,7 @@ def _openai_compatible_chat(
 def _gemini_chat(model: str, api_key: str, system_prompt: str, user_prompt: str) -> str:
     cleaned_key = _clean_api_key(api_key)
     if not cleaned_key:
-        raise ValueError('Google API key is required for Gemini chat. Please set GEMINI_API_KEY in .env or under Providers.')
+        raise ValueError('Google API key is required for Gemini chat. Please enter your API key under Settings > Providers.')
 
     endpoint = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={cleaned_key}'
     payload = {
@@ -132,7 +147,7 @@ def _gemini_chat(model: str, api_key: str, system_prompt: str, user_prompt: str)
         detail = _extract_error_detail(response)
         detail_msg = f': {detail}' if detail else ''
         if response.status_code in {400, 401, 403}:
-            raise ValueError(f'Gemini authentication/request error ({response.status_code}){detail_msg}. Check GEMINI_API_KEY.')
+            raise ValueError(f'Gemini authentication/request error ({response.status_code}){detail_msg}.')
         if response.status_code == 404:
             raise ValueError(f'Gemini model "{model}" was not found (404 Not Found){detail_msg}.')
         if response.status_code == 429:
@@ -151,7 +166,7 @@ def _huggingface_chat(model: str, api_key: str, system_prompt: str, user_prompt:
     from huggingface_hub import InferenceClient
     cleaned_key = _clean_api_key(api_key)
     if not cleaned_key:
-        raise ValueError('Hugging Face API key is required for hosted chat inference. Please set HUGGINGFACE_API_KEY in .env or under Providers.')
+        raise ValueError('Hugging Face API key is required for hosted chat inference. Please enter your API key under Settings > Providers.')
     try:
         client = InferenceClient(api_key=cleaned_key)
         response = client.chat_completion(
@@ -212,18 +227,18 @@ def generate_response(
     resolved_api_key = _clean_api_key(api_key)
 
     if provider_name == 'groq':
-        final_key = resolved_api_key or _clean_api_key(current_app.config.get('GROQ_API_KEY'))
+        final_key = _resolve_key_for_provider(resolved_api_key, 'GROQ_API_KEY')
+        active_model = GROQ_DEPRECATED_MODEL_MAP.get(model, model)
         return _openai_compatible_chat(
             'https://api.groq.com/openai/v1',
             final_key,
-            model,
+            active_model,
             system_prompt,
             user_prompt,
             provider_name='Groq',
-            env_var='GROQ_API_KEY',
         )
     if provider_name == 'openrouter':
-        final_key = resolved_api_key or _clean_api_key(current_app.config.get('OPENROUTER_API_KEY'))
+        final_key = _resolve_key_for_provider(resolved_api_key, 'OPENROUTER_API_KEY')
         return _openai_compatible_chat(
             'https://openrouter.ai/api/v1',
             final_key,
@@ -232,15 +247,14 @@ def generate_response(
             user_prompt,
             {'HTTP-Referer': 'https://vercel.com', 'X-Title': 'Personal AI Bot Builder'},
             provider_name='OpenRouter',
-            env_var='OPENROUTER_API_KEY',
         )
     if provider_name in {'gemini', 'google', 'google-gemini'}:
-        final_key = resolved_api_key or _clean_api_key(
-            current_app.config.get('GEMINI_API_KEY') or current_app.config.get('GOOGLE_API_KEY')
+        final_key = _resolve_key_for_provider(resolved_api_key, 'GEMINI_API_KEY') or (
+            '' if current_app.config.get('IS_VERCEL') else _clean_api_key(current_app.config.get('GOOGLE_API_KEY'))
         )
         return _gemini_chat(model, final_key, system_prompt, user_prompt)
     if provider_name in {'huggingface', 'hf'}:
-        final_key = resolved_api_key or _clean_api_key(current_app.config.get('HUGGINGFACE_API_KEY'))
+        final_key = _resolve_key_for_provider(resolved_api_key, 'HUGGINGFACE_API_KEY')
         return _huggingface_chat(model, final_key, system_prompt, user_prompt)
     if provider_name == 'ollama':
         return _ollama_chat(model, system_prompt, user_prompt)
