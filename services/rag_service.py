@@ -84,7 +84,6 @@ def chat_with_bot(user_id: int, question: str) -> dict[str, Any]:
 
     prompt = build_prompt(str(profile['personality_prompt']), context_chunks, cleaned_question)
 
-    _store_message(user_id, 'user', cleaned_question)
     answer = generate_response(
         provider=str(provider_config['chat_provider']),
         model=str(provider_config['chat_model']),
@@ -92,5 +91,6 @@ def chat_with_bot(user_id: int, question: str) -> dict[str, Any]:
         system_prompt=str(profile['personality_prompt']),
         user_prompt=prompt,
     )
+    _store_message(user_id, 'user', cleaned_question)
     _store_message(user_id, 'assistant', answer)
     return {'answer': answer, 'context_chunks': context_chunks}

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modelOptions = {
         chat: {
-            groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it'],
+            groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.2-3b-preview', 'llama-3.2-1b-preview'],
             ollama: ['llama3.2', 'llama3.1', 'mistral', 'gemma2', 'phi3'],
             gemini: ['gemini-1.5-flash', 'gemini-1.5-pro'],
             openrouter: ['meta-llama/llama-3.1-8b-instruct', 'anthropic/claude-3.5-sonnet', 'google/gemini-pro-1.5'],
@@ -55,6 +55,56 @@ document.addEventListener('DOMContentLoaded', () => {
         hydrateModelSelect('embedding_provider', 'embedding_model', modelOptions.embedding);
         embeddingProviderSelect.addEventListener('change', () => {
             hydrateModelSelect('embedding_provider', 'embedding_model', modelOptions.embedding, true);
+        });
+    }
+
+    const testProviderBtn = document.getElementById('test-provider-btn');
+    const testResultBox = document.getElementById('test-result-box');
+    if (testProviderBtn && testResultBox) {
+        testProviderBtn.addEventListener('click', async () => {
+            const providerSelect = document.querySelector('select[name="chat_provider"]');
+            const modelSelect = document.getElementById('chat_model');
+            const apiKeyInput = document.getElementById('chat_api_key');
+
+            testProviderBtn.disabled = true;
+            testProviderBtn.textContent = 'Testing...';
+            testResultBox.style.display = 'block';
+            testResultBox.style.backgroundColor = '#EFF6FF';
+            testResultBox.style.borderColor = '#3B82F6';
+            testResultBox.style.color = '#1E3A8A';
+            testResultBox.textContent = 'Contacting provider API...';
+
+            try {
+                const response = await fetch('/providers/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_provider: providerSelect ? providerSelect.value : '',
+                        chat_model: modelSelect ? modelSelect.value : '',
+                        chat_api_key: apiKeyInput ? apiKeyInput.value : ''
+                    })
+                });
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    testResultBox.style.backgroundColor = '#ECFDF5';
+                    testResultBox.style.borderColor = '#10B981';
+                    testResultBox.style.color = '#065F46';
+                    testResultBox.textContent = `✓ ${data.message}`;
+                } else {
+                    testResultBox.style.backgroundColor = '#FEF2F2';
+                    testResultBox.style.borderColor = '#EF4444';
+                    testResultBox.style.color = '#991B1B';
+                    testResultBox.textContent = `✗ ${data.message || 'Connection test failed.'}`;
+                }
+            } catch (err) {
+                testResultBox.style.backgroundColor = '#FEF2F2';
+                testResultBox.style.borderColor = '#EF4444';
+                testResultBox.style.color = '#991B1B';
+                testResultBox.textContent = `✗ Request failed: ${err.message}`;
+            } finally {
+                testProviderBtn.disabled = false;
+                testProviderBtn.textContent = 'Test Chat Connection';
+            }
         });
     }
 

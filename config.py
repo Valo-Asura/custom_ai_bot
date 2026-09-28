@@ -30,6 +30,15 @@ def _env_flag(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
+def _clean_secret(value: str | None) -> str:
+    if not value:
+        return ''
+    cleaned = value.strip().strip("'\"`")
+    if cleaned.lower().startswith('bearer '):
+        cleaned = cleaned[7:].strip().strip("'\"`")
+    return cleaned
+
+
 class Config:
     IS_VERCEL = bool(os.getenv('VERCEL'))
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me')
@@ -52,15 +61,15 @@ class Config:
     MONGO_SOCKET_TIMEOUT_MS = int(os.getenv('MONGO_SOCKET_TIMEOUT_MS', '6000'))
     MONGO_AUTO_CREATE_INDEXES = _env_flag('MONGO_AUTO_CREATE_INDEXES', default=not IS_VERCEL)
 
-    PINECONE_API_KEY = os.getenv('PINECONE_API_KEY', '').strip()
-    PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'personal-ai-bot')
-    PINECONE_CLOUD = os.getenv('PINECONE_CLOUD', 'aws')
-    PINECONE_REGION = os.getenv('PINECONE_REGION', 'us-east-1')
+    PINECONE_API_KEY = _clean_secret(os.getenv('PINECONE_API_KEY'))
+    PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'personal-ai-bot').strip()
+    PINECONE_CLOUD = os.getenv('PINECONE_CLOUD', 'aws').strip()
+    PINECONE_REGION = os.getenv('PINECONE_REGION', 'us-east-1').strip()
 
-    GROQ_API_KEY = os.getenv('GROQ_API_KEY', '').strip()
-    OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '').strip()
-    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '').strip() or os.getenv('GOOGLE_API_KEY', '').strip()
-    HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY', '').strip()
+    GROQ_API_KEY = _clean_secret(os.getenv('GROQ_API_KEY'))
+    OPENROUTER_API_KEY = _clean_secret(os.getenv('OPENROUTER_API_KEY'))
+    GEMINI_API_KEY = _clean_secret(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))
+    HUGGINGFACE_API_KEY = _clean_secret(os.getenv('HUGGINGFACE_API_KEY'))
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434').rstrip('/')
 
     DEFAULT_CHAT_PROVIDER = os.getenv('DEFAULT_CHAT_PROVIDER', 'groq')

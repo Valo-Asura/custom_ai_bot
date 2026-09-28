@@ -38,8 +38,15 @@
         </div>
 
         <label>Chat API Key
-            <input type="password" name="chat_api_key" placeholder="{% if providers.chat_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GROQ_API_KEY, etc){% endif %}">
+            <input type="password" id="chat_api_key" name="chat_api_key" placeholder="{% if providers.chat_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GROQ_API_KEY, etc){% endif %}">
         </label>
+        {% if providers.chat_api_key %}
+        <div style="margin-top: -6px; margin-bottom: 12px;">
+            <label style="font-size: 0.85rem; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <input type="checkbox" name="clear_chat_key" value="1"> Clear custom key and use default key from .env
+            </label>
+        </div>
+        {% endif %}
 
         <div class="grid two-col">
             <label>Embedding Provider
@@ -55,13 +62,24 @@
         </div>
 
         <label>Embedding API Key
-            <input type="password" name="embedding_api_key" placeholder="{% if providers.embedding_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GEMINI_API_KEY, etc){% endif %}">
+            <input type="password" id="embedding_api_key" name="embedding_api_key" placeholder="{% if providers.embedding_api_key %}•••••••••••••••• (leave blank to keep unchanged){% else %}Leave blank to use default key in .env (GEMINI_API_KEY, etc){% endif %}">
         </label>
-
-        <div class="form-footer-row">
-            <span class="muted inline-note">💡 Chunking uses LangChain `RecursiveCharacterTextSplitter`, not the selected model provider.</span>
-            <button type="submit">Save Provider Settings</button>
+        {% if providers.embedding_api_key %}
+        <div style="margin-top: -6px; margin-bottom: 12px;">
+            <label style="font-size: 0.85rem; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <input type="checkbox" name="clear_embedding_key" value="1"> Clear custom key and use default key from .env
+            </label>
         </div>
+        {% endif %}
+
+        <div class="form-footer-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <span class="muted inline-note">💡 Chunking uses LangChain `RecursiveCharacterTextSplitter`, not the selected model provider.</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" id="test-provider-btn" class="btn-secondary" style="padding: 10px 16px;">Test Chat Connection</button>
+                <button type="submit">Save Provider Settings</button>
+            </div>
+        </div>
+        <div id="test-result-box" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--r-sm); border: 2px solid var(--border); font-size: 0.9rem;"></div>
     </form>
 </section>
 {% endblock %}

@@ -24,6 +24,15 @@ def get_provider_config(user_id: int) -> dict[str, Any]:
     }
 
 
+def _clean_input_key(val: str | None) -> str:
+    if not val:
+        return ''
+    cleaned = str(val).strip().strip("'\"`")
+    if cleaned.lower().startswith('bearer '):
+        cleaned = cleaned[7:].strip().strip("'\"`")
+    return cleaned
+
+
 def upsert_provider_config(
     user_id: int,
     chat_provider: str,
@@ -32,14 +41,27 @@ def upsert_provider_config(
     embedding_provider: str,
     embedding_model: str,
     embedding_api_key: str,
+    clear_chat_key: bool = False,
+    clear_embedding_key: bool = False,
 ) -> None:
     db = get_db()
     existing = db.execute('SELECT * FROM provider_configs WHERE user_id = ?', (user_id,)).fetchone()
     # SECURITY: API keys are stored in plaintext. In production, encrypt secrets or use a managed secret store.
     # SECURITY:SECRETS - plaintext API key storage is basic; encrypt in production.
+    cleaned_chat_key = _clean_input_key(chat_api_key)
+    cleaned_emb_key = _clean_input_key(embedding_api_key)
+
     if existing:
-        final_chat_api_key = chat_api_key.strip() if chat_api_key.strip() else existing['chat_api_key']
-        final_embedding_api_key = embedding_api_key.strip() if embedding_api_key.strip() else existing['embedding_api_key']
+        if clear_chat_key:
+            final_chat_api_key = ''
+        else:
+            final_chat_api_key = cleaned_chat_key if cleaned_chat_key else existing['chat_api_key']
+
+        if clear_embedding_key:
+            final_embedding_api_key = ''
+        else:
+            final_embedding_api_key = cleaned_emb_key if cleaned_emb_key else existing['embedding_api_key']
+
         db.execute(
             '''
             UPDATE provider_configs
@@ -63,6 +85,8 @@ def upsert_provider_config(
             ),
         )
     else:
+        final_chat_api_key = '' if clear_chat_key else cleaned_chat_key
+        final_embedding_api_key = '' if clear_embedding_key else cleaned_emb_key
         db.execute(
             '''
             INSERT INTO provider_configs (
@@ -79,10 +103,10 @@ def upsert_provider_config(
                 user_id,
                 chat_provider,
                 chat_model,
-                chat_api_key.strip(),
+                final_chat_api_key,
                 embedding_provider,
                 embedding_model,
-                embedding_api_key.strip(),
+                final_embedding_api_key,
             ),
         )
     db.commit()
