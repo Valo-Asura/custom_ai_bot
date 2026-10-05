@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, redirect, request, url_for
 
 from database.db import get_db
 from services.auth_service import get_current_user, login_required
 from services.rag_service import chat_with_bot, list_chat_messages
+from controllers.view_helpers import render_react_page
 
 
 def _message_limit_error(is_json: bool, message: str):
@@ -20,7 +21,14 @@ def register_routes(app: Flask) -> None:
     def chat() -> str:
         current_user = get_current_user()
         assert current_user is not None
-        return render_template('chat.html', messages=list_chat_messages(int(current_user['id'])))
+        return render_react_page(
+            'chat',
+            'Chat | RAG Bot Builder',
+            messages=[
+                {key: message[key] for key in ('id', 'role', 'content')}
+                for message in list_chat_messages(int(current_user['id']))
+            ],
+        )
 
     @app.route('/chat/send', methods=['POST'])
     @login_required

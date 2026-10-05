@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#FFFDF5">
+    <title>{{ page_title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/app.css') }}?v=1">
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script id="app-state" type="application/json">{{ {
+        'page': react_page,
+        'props': react_props,
+        'currentUser': react_user,
+        'flashes': get_flashed_messages(with_categories=true)
+    }|tojson }}</script>
+    <script type="module" src="{{ url_for('static', filename='dist/app.js') }}?v=3"></script>
+</body>
+</html>

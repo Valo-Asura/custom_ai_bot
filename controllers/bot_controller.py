@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from flask import Flask, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask import Flask, current_app, flash, jsonify, redirect, request, url_for
 
 from services.auth_service import get_current_user, login_required
 from services.llm_service import test_chat_connection
 from services.personality_service import get_profile, upsert_profile
 from services.provider_service import get_provider_config, upsert_provider_config
+from controllers.view_helpers import render_react_page
 
 
 def register_routes(app: Flask) -> None:
@@ -28,7 +29,12 @@ def register_routes(app: Flask) -> None:
             flash('Bot personality saved.', 'success')
             return redirect(url_for('personality'))
 
-        return render_template('personality.html', profile=get_profile(user_id))
+        profile = get_profile(user_id)
+        return render_react_page(
+            'personality',
+            'Personality | Personal AI Bot Builder',
+            profile={key: profile[key] for key in ('bot_name', 'personality_prompt', 'tone', 'description')},
+        )
 
     @app.route('/providers', methods=['GET', 'POST'])
     @login_required
@@ -57,9 +63,20 @@ def register_routes(app: Flask) -> None:
             flash('Provider settings saved.', 'success')
             return redirect(url_for('providers'))
 
-        return render_template(
-            'providers.html',
-            providers=get_provider_config(user_id),
+        providers = get_provider_config(user_id)
+        # Never serialize saved provider secrets into the browser bootstrap data.
+        safe_providers = {
+            'chat_provider': providers['chat_provider'],
+            'chat_model': providers['chat_model'],
+            'has_chat_api_key': bool(providers.get('chat_api_key')),
+            'embedding_provider': providers['embedding_provider'],
+            'embedding_model': providers['embedding_model'],
+            'has_embedding_api_key': bool(providers.get('embedding_api_key')),
+        }
+        return render_react_page(
+            'providers',
+            'Providers | Personal AI Bot Builder',
+            providers=safe_providers,
             chat_providers=current_app.config['CHAT_PROVIDERS'],
             embedding_providers=current_app.config['EMBEDDING_PROVIDERS'],
         )

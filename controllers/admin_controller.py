@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import Flask, flash, redirect, url_for
 
 from database.db import database_health
 from services.auth_service import admin_required
@@ -10,6 +10,7 @@ from services.document_service import delete_document_assets, get_document_by_id
 from services.pinecone_service import delete_namespace, pinecone_health
 from services.provider_service import list_provider_overview
 from services.user_service import count_users, delete_user, get_user_by_id, list_users
+from controllers.view_helpers import render_react_page
 
 
 def register_routes(app: Flask) -> None:
@@ -26,12 +27,35 @@ def register_routes(app: Flask) -> None:
                 'message': 'Upload folder writable locally' if upload_path.exists() else 'Upload folder is missing',
             },
         }
-        return render_template(
-            'admin.html',
+        provider_overview = [
+            {
+                key: row[key]
+                for key in (
+                    'email',
+                    'chat_provider',
+                    'chat_model',
+                    'embedding_provider',
+                    'embedding_model',
+                    'chat_api_key_masked',
+                    'embedding_api_key_masked',
+                )
+            }
+            for row in list_provider_overview()
+        ]
+        admin_documents = [
+            {
+                key: document[key]
+                for key in ('id', 'email', 'original_filename', 'file_type', 'pinecone_namespace', 'chunk_count')
+            }
+            for document in list_all_documents()
+        ]
+        return render_react_page(
+            'admin',
+            'Admin | Personal AI Bot Builder',
             users=list_users(),
             user_count=count_users(),
-            documents=list_all_documents(),
-            provider_overview=list_provider_overview(),
+            documents=admin_documents,
+            provider_overview=provider_overview,
             health=health,
         )
 

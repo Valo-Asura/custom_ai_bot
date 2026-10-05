@@ -30,9 +30,9 @@ https://personal-ai-bot-builder-sigma.vercel.app
 | --- | --- |
 | App | Flask application factory |
 | Controllers | Route modules in `controllers/` |
-| Views | Jinja templates in `templates/` |
+| Views | React pages bootstrapped by Flask from `templates/react_page.html` |
 | Services | Business logic in `services/` |
-| UI | HTML, CSS, vanilla JavaScript |
+| UI | React, Vite, CSS design tokens |
 | Auth | Flask sessions, user/admin guards |
 | Data | MongoDB Atlas in production, SQLite locally |
 | Vector DB | Pinecone namespaces per user |
@@ -50,16 +50,21 @@ config.py              # Runtime config and environment defaults
 controllers/           # Route handlers grouped by workflow
 database/              # SQLite schema plus MongoDB/SQLite adapter layer
 services/              # Auth, RAG, provider, document, and vector logic
-templates/             # Jinja views
-static/                # Cached CSS and JavaScript
+templates/             # Flask-to-React bootstrap shell
+frontend/src/           # React application and page components
+frontend/package.json   # Frontend dependencies and Vite commands
+static/style.css        # Theme styles and design tokens
+static/dist/            # Built React assets served by Flask and Vercel
 docs/screenshots/      # README screenshots
 uploads/               # Local upload folder; ignored except .gitkeep
 ```
 
-The current structure follows a practical MVC split:
+The Flask application remains the backend for sessions, forms, uploads, and service calls. React renders the interface from page data supplied by Flask, while the existing routes and server-side workflows remain in place.
+
+The backend structure follows a practical MVC split:
 
 - **Controllers:** request/response flow only
-- **Views:** Jinja templates and static assets
+- **Views:** React components in `frontend/src/`, with Flask-provided page data
 - **Model/Data:** `database/` persistence adapter plus service-layer domain operations
 
 ## Workflow
@@ -81,7 +86,8 @@ flowchart LR
 - Static CSS/JS is served with immutable cache headers.
 - UI uses system fonts, so no remote font request is needed.
 - Page-load animation was removed to avoid first-paint work and screenshot fade.
-- Provider dropdown logic lives in cached `static/app.js`.
+- React page components and interactions live in `frontend/src/main.jsx`.
+- Vite bundles the React app into `static/dist/` for Flask and Vercel.
 - Chat defaults are tuned for Vercel free-tier response time: shorter HTTP read timeout, smaller answer token budget, and fewer retrieved chunks.
 - Local-only providers fail fast on Vercel instead of hanging.
 - SQLite fallback creates its schema on connection, so local/dev fallback recovers if the generated DB file is removed.
@@ -91,16 +97,20 @@ flowchart LR
 From the project folder:
 
 ```bash
-cd /home/asura/Downloads/botty/personal-ai-bot-builder
+cd /path/to/custom_ai_bot
 ```
 
-Create and install dependencies:
+Install the Python dependencies and build the React frontend:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+cd frontend
+npm install
+npm run build
+cd ..
 ```
 
 Run locally:
@@ -139,6 +149,8 @@ DEFAULT_CHAT_MODEL=llama-3.3-70b-versatile
 DEFAULT_EMBEDDING_PROVIDER=gemini
 DEFAULT_EMBEDDING_MODEL=gemini-embedding-001
 ```
+
+The generated `static/dist/` bundle is served by Flask. Rebuild it after frontend changes and before deploying to Vercel.
 
 For first MongoDB setup:
 

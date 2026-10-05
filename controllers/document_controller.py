@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, request, url_for
 
 from services.auth_service import get_current_user, login_required
 from services.document_service import delete_document_assets, get_document_by_id, ingest_document, list_user_documents
 from services.pinecone_service import delete_namespace
 from services.provider_service import get_provider_config
+from controllers.view_helpers import render_react_page
 
 
 def register_routes(app: Flask) -> None:
@@ -34,7 +35,14 @@ def register_routes(app: Flask) -> None:
                 flash(f'Upload failed: {exc}', 'error')
             return redirect(url_for('upload'))
 
-        return render_template('upload.html', documents=list_user_documents(user_id))
+        return render_react_page(
+            'upload',
+            'Upload | RAG Bot Builder',
+            documents=[
+                {key: document[key] for key in ('id', 'original_filename', 'file_type', 'chunk_count')}
+                for document in list_user_documents(user_id)
+            ],
+        )
 
     @app.route('/upload/documents/<int:document_id>/delete', methods=['POST'])
     @login_required
