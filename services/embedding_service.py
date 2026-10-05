@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import random
+import re
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import requests
@@ -53,15 +58,74 @@ def _embed_with_gemini(model: str, api_key: str, texts: list[str]) -> list[list[
             for text in texts
         ]
     }
-    response = requests.post(endpoint, json=payload, timeout=_timeout())
+    response = None
+    for attempt in range(3):
+        response = requests.post(endpoint, json=payload, timeout=_timeout())
+        if response.status_code not in {429, 503} or attempt == 2:
+            break
+        time.sleep(_gemini_retry_delay(response, attempt))
+
+    assert response is not None
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as exc:
         if exc.response is not None and exc.response.status_code == 404:
             raise ValueError(f"The model '{model}' was not found. Please verify your Gemini API key has access to this model or try a different one.")
+        if exc.response is not None and exc.response.status_code == 429:
+            detail = _gemini_error_message(exc.response)
+            detail_text = f' Google detail: {detail}' if detail else ''
+            raise ValueError(
+                'Gemini embedding quota/rate limit reached (429 RESOURCE_EXHAUSTED). '
+                'Wait and retry, or check this project’s model limits and usage in Google AI Studio. '
+                'If its daily quota is exhausted, retries will not help until the quota resets.'
+                f'{detail_text}'
+            ) from exc
         raise ValueError(f"Gemini API Error: {exc.response.text if exc.response is not None else str(exc)}")
     data = response.json()
     return [_normalize_embedding(item['values']) for item in data.get('embeddings', [])]
+
+
+def _gemini_error_message(response: requests.Response) -> str:
+    try:
+        error = response.json().get('error', {})
+        if isinstance(error, dict):
+            return str(error.get('message') or '')[:400]
+    except (ValueError, AttributeError):
+        pass
+    return ''
+
+
+def _gemini_retry_delay(response: requests.Response, attempt: int) -> float:
+    delay: float | None = None
+    retry_after = response.headers.get('Retry-After', '').strip()
+    if retry_after:
+        try:
+            delay = float(retry_after)
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(retry_after)
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=timezone.utc)
+                delay = (retry_at - datetime.now(timezone.utc)).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                pass
+
+    if delay is None:
+        try:
+            details = response.json().get('error', {}).get('details', [])
+            for item in details:
+                retry_delay = item.get('retryDelay') if isinstance(item, dict) else None
+                if retry_delay:
+                    match = re.fullmatch(r'([0-9]+(?:\.[0-9]+)?)s', str(retry_delay).strip())
+                    if match:
+                        delay = float(match.group(1))
+                        break
+        except (ValueError, AttributeError, TypeError):
+            pass
+
+    if delay is None:
+        delay = 2 ** attempt
+    return max(0.0, min(delay, 4.0)) + random.uniform(0.0, 0.25)
 
 
 def _embed_with_huggingface(model: str, api_key: str | None, texts: list[str]) -> list[list[float]]:
